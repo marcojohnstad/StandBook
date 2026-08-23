@@ -1,166 +1,160 @@
-<!DOCTYPE html>
-<html lang="da">
+"use strict";
 
-<head>
-
-  <meta charset="UTF-8">
-
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0"
-  >
-
-  <title>
-    Administration – StandBook
-  </title>
-
-</head>
+const db = window.standbookSupabase;
 
 
-<body>
+/* =========================================
+   HJÆLPEFUNKTIONER
+========================================= */
 
-  <main id="page" hidden>
+function createSlug(text) {
 
-    <h1>
-      StandBook
-    </h1>
+  return text
+    .toLowerCase()
+    .trim()
 
-    <h2>
-      Administration
-    </h2>
+    // Danske bogstaver
+    .replace(/æ/g, "ae")
+    .replace(/ø/g, "oe")
+    .replace(/å/g, "aa")
 
-    <p>
-      Navn:
-      <strong id="admin-name"></strong>
-    </p>
+    // Alt andet end bogstaver/tal bliver -
+    .replace(/[^a-z0-9]+/g, "-")
 
-    <p>
-      Rolle:
-      <strong id="admin-role"></strong>
-    </p>
-
-    <button
-      id="logout-button"
-      type="button"
-    >
-      Log ud
-    </button>
-
-  </main>
+    // Fjern - i starten/slutningen
+    .replace(/^-+|-+$/g, "");
+}
 
 
-  <p id="loading">
-    Kontrollerer adgang...
-  </p>
+/* =========================================
+   OPRET ARRANGEMENT
+========================================= */
+
+async function createEvent({
+  title,
+  description,
+  slug,
+  shiftMinutes,
+  userId
+}) {
+
+  const cleanTitle = title.trim();
+  const cleanDescription = description.trim();
+  const cleanSlug = slug.trim();
 
 
-  <!-- SUPABASE -->
-
-  <script
-    src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
-  </script>
-
-
-  <!-- STANDBOOK -->
-
-  <script src="js/config.js"></script>
-
-  <script src="js/supabase.js"></script>
-
-  <!--
-    v=2 sørger for, at browseren ikke
-    bruger en gammel cached auth.js
-  -->
-
-  <script src="js/auth.js?v=2"></script>
+  if (!cleanTitle) {
+    throw new Error(
+      "Arrangementet skal have et navn."
+    );
+  }
 
 
-  <script>
-
-    async function startAdmin() {
-
-      const loading =
-        document.querySelector("#loading");
-
-      const page =
-        document.querySelector("#page");
+  if (!cleanSlug) {
+    throw new Error(
+      "Arrangementet skal have et URL-navn."
+    );
+  }
 
 
-      try {
-
-        const profile =
-          await window
-            .StandBookAuth
-            .requireAdmin();
-
-
-        /*
-          Hvis requireAdmin har sendt
-          brugeren til login.html,
-          stopper vi her.
-        */
-
-        if (!profile) {
-          return;
-        }
+  if (
+    !Number.isInteger(shiftMinutes) ||
+    shiftMinutes < 15 ||
+    shiftMinutes > 480
+  ) {
+    throw new Error(
+      "Vagtlængden er ugyldig."
+    );
+  }
 
 
-        document.querySelector(
-          "#admin-name"
-        ).textContent =
-          profile.full_name;
+  const {
+    data,
+    error
+  } = await db
+    .from("events")
+    .insert({
+      title: cleanTitle,
+
+      description:
+        cleanDescription || null,
+
+      slug: cleanSlug,
+
+      status: "draft",
+
+      shift_minutes: shiftMinutes,
+
+      created_by: userId
+    })
+    .select()
+    .single();
 
 
-        document.querySelector(
-          "#admin-role"
-        ).textContent =
-          profile.role;
+  if (error) {
 
+    /*
+      PostgreSQL-fejl 23505 betyder
+      typisk duplicate/unique constraint.
+    */
 
-        loading.hidden = true;
+    if (error.code === "23505") {
 
-        page.hidden = false;
-
-
-      } catch (error) {
-
-        console.error(
-          "Admin initialization error:",
-          error
-        );
-
-
-        /*
-          Ved enhver uventet fejl
-          sender vi sikkert tilbage
-          til login.
-        */
-
-        window.location.replace(
-          "login.html"
-        );
-      }
-    }
-
-
-    document
-      .querySelector("#logout-button")
-      .addEventListener(
-        "click",
-        async () => {
-
-          await window
-            .StandBookAuth
-            .logout();
-
-        }
+      throw new Error(
+        "URL-navnet bruges allerede af et andet arrangement."
       );
 
+    }
 
-    startAdmin();
+    throw error;
+  }
 
-  </script>
 
-</body>
+  return data;
+}
 
-</html>
+
+/* =========================================
+   HENT ARRANGEMENTER
+========================================= */
+
+async function getEvents() {
+
+  const {
+    data,
+    error
+  } = await db
+    .from("events")
+    .select(`
+      id,
+      title,
+      description,
+      slug,
+      status,
+      shift_minutes,
+      created_at
+    `)
+    .order(
+      "created_at",
+      { ascending: false }
+    );
+
+
+  if (error) {
+    throw error;
+  }
+
+
+  return data || [];
+}
+
+
+/* =========================================
+   EXPORT
+========================================= */
+
+window.StandBookAdmin = {
+  createSlug,
+  createEvent,
+  getEvents
+};

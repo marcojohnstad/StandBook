@@ -3,9 +3,10 @@
 const sb = window.standbookSupabase;
 
 
-/**
- * Log ind med e-mail og adgangskode.
- */
+/* -----------------------------
+   LOGIN
+----------------------------- */
+
 async function login(email, password) {
 
   const { data, error } =
@@ -22,110 +23,118 @@ async function login(email, password) {
 }
 
 
-/**
- * Log den nuværende bruger ud.
- */
+/* -----------------------------
+   LOGOUT
+----------------------------- */
+
 async function logout() {
-
-  const { error } =
-    await sb.auth.signOut();
-
-  if (error) {
-    console.error(
-      "Fejl under logout:",
-      error
-    );
-  }
-
-  window.location.href = "login.html";
-}
-
-
-/**
- * Hent den nuværende bruger.
- *
- * Hvis der ikke findes en aktiv session,
- * returnerer funktionen null.
- */
-async function getCurrentUser() {
 
   try {
 
-    const {
-      data: { user },
-      error
-    } = await sb.auth.getUser();
-
-    if (error) {
-
-      console.warn(
-        "Ingen aktiv session:",
-        error.message
-      );
-
-      return null;
-    }
-
-    return user || null;
+    await sb.auth.signOut();
 
   } catch (error) {
 
     console.warn(
-      "Kunne ikke hente bruger:",
+      "Logout gav en fejl:",
+      error
+    );
+
+  }
+
+  window.location.replace("login.html");
+}
+
+
+/* -----------------------------
+   AKTUEL BRUGER
+----------------------------- */
+
+async function getCurrentUser() {
+
+  const {
+    data,
+    error
+  } = await sb.auth.getSession();
+
+
+  if (error) {
+
+    console.warn(
+      "Kunne ikke læse session:",
       error
     );
 
     return null;
   }
+
+
+  if (
+    !data ||
+    !data.session ||
+    !data.session.user
+  ) {
+    return null;
+  }
+
+
+  return data.session.user;
 }
 
 
-/**
- * Hent StandBook-profilen
- * for den bruger, der er logget ind.
- */
+/* -----------------------------
+   AKTUEL STANDBOOK-PROFIL
+----------------------------- */
+
 async function getCurrentProfile() {
 
   const user =
     await getCurrentUser();
+
 
   if (!user) {
     return null;
   }
 
 
-  const { data, error } =
-    await sb
-      .from("profiles")
-      .select(
-        "id, full_name, role"
-      )
-      .eq("id", user.id)
-      .maybeSingle();
+  const {
+    data,
+    error
+  } = await sb
+    .from("profiles")
+    .select(
+      "id, full_name, role"
+    )
+    .eq("id", user.id)
+    .maybeSingle();
 
 
   if (error) {
+
+    console.error(
+      "Fejl ved hentning af profil:",
+      error
+    );
+
     throw error;
   }
+
 
   return data || null;
 }
 
 
-/**
- * Beskyt admin-sider.
- *
- * Kun brugere med rollen
- * "owner" eller "admin"
- * får adgang.
- */
+/* -----------------------------
+   BESKYT ADMIN-SIDE
+----------------------------- */
+
 async function requireAdmin() {
 
   const user =
     await getCurrentUser();
 
 
-  // Ingen login
+  // Ingen aktiv session
   if (!user) {
 
     window.location.replace(
@@ -136,50 +145,23 @@ async function requireAdmin() {
   }
 
 
-  try {
-
-    const profile =
-      await getCurrentProfile();
+  const profile =
+    await getCurrentProfile();
 
 
-    // Bruger findes, men har ikke
-    // en gyldig StandBook admin-profil
-    if (
-      !profile ||
-      !["owner", "admin"].includes(
-        profile.role
-      )
-    ) {
-
-      await sb.auth.signOut();
-
-      window.location.replace(
-        "login.html"
-      );
-
-      return null;
-    }
-
-
-    return profile;
-
-  } catch (error) {
-
-    console.error(
-      "Kunne ikke kontrollere admin-adgang:",
-      error
-    );
-
+  // Logget ind, men ikke StandBook-admin
+  if (
+    !profile ||
+    !["owner", "admin"].includes(
+      profile.role
+    )
+  ) {
 
     try {
       await sb.auth.signOut();
-    } catch (logoutError) {
-      console.error(
-        "Kunne ikke logge ud:",
-        logoutError
-      );
+    } catch (error) {
+      console.warn(error);
     }
-
 
     window.location.replace(
       "login.html"
@@ -187,13 +169,16 @@ async function requireAdmin() {
 
     return null;
   }
+
+
+  return profile;
 }
 
 
-/**
- * Gør funktionerne tilgængelige
- * for resten af StandBook.
- */
+/* -----------------------------
+   EXPORT
+----------------------------- */
+
 window.StandBookAuth = {
   login,
   logout,

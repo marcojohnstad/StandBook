@@ -1,160 +1,781 @@
-"use strict";
+<!DOCTYPE html>
+<html lang="da">
 
-const db = window.standbookSupabase;
+<head>
 
+  <meta charset="UTF-8">
 
-/* =========================================
-   HJÆLPEFUNKTIONER
-========================================= */
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
 
-function createSlug(text) {
+  <title>
+    Administration – StandBook
+  </title>
 
-  return text
-    .toLowerCase()
-    .trim()
+  <style>
 
-    // Danske bogstaver
-    .replace(/æ/g, "ae")
-    .replace(/ø/g, "oe")
-    .replace(/å/g, "aa")
+    body {
+      font-family:
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
 
-    // Alt andet end bogstaver/tal bliver -
-    .replace(/[^a-z0-9]+/g, "-")
-
-    // Fjern - i starten/slutningen
-    .replace(/^-+|-+$/g, "");
-}
-
-
-/* =========================================
-   OPRET ARRANGEMENT
-========================================= */
-
-async function createEvent({
-  title,
-  description,
-  slug,
-  shiftMinutes,
-  userId
-}) {
-
-  const cleanTitle = title.trim();
-  const cleanDescription = description.trim();
-  const cleanSlug = slug.trim();
-
-
-  if (!cleanTitle) {
-    throw new Error(
-      "Arrangementet skal have et navn."
-    );
-  }
-
-
-  if (!cleanSlug) {
-    throw new Error(
-      "Arrangementet skal have et URL-navn."
-    );
-  }
-
-
-  if (
-    !Number.isInteger(shiftMinutes) ||
-    shiftMinutes < 15 ||
-    shiftMinutes > 480
-  ) {
-    throw new Error(
-      "Vagtlængden er ugyldig."
-    );
-  }
-
-
-  const {
-    data,
-    error
-  } = await db
-    .from("events")
-    .insert({
-      title: cleanTitle,
-
-      description:
-        cleanDescription || null,
-
-      slug: cleanSlug,
-
-      status: "draft",
-
-      shift_minutes: shiftMinutes,
-
-      created_by: userId
-    })
-    .select()
-    .single();
-
-
-  if (error) {
-
-    /*
-      PostgreSQL-fejl 23505 betyder
-      typisk duplicate/unique constraint.
-    */
-
-    if (error.code === "23505") {
-
-      throw new Error(
-        "URL-navnet bruges allerede af et andet arrangement."
-      );
-
+      max-width: 700px;
+      margin: 50px auto;
+      padding: 20px;
     }
 
-    throw error;
-  }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 20px;
+      margin-bottom: 40px;
+    }
 
 
-  return data;
-}
+    button,
+    input,
+    textarea,
+    select {
+      font: inherit;
+    }
 
 
-/* =========================================
-   HENT ARRANGEMENTER
-========================================= */
-
-async function getEvents() {
-
-  const {
-    data,
-    error
-  } = await db
-    .from("events")
-    .select(`
-      id,
-      title,
-      description,
-      slug,
-      status,
-      shift_minutes,
-      created_at
-    `)
-    .order(
-      "created_at",
-      { ascending: false }
-    );
+    button {
+      cursor: pointer;
+      padding: 10px 16px;
+    }
 
 
-  if (error) {
-    throw error;
-  }
+    input,
+    textarea,
+    select {
+      box-sizing: border-box;
+      width: 100%;
+      padding: 10px;
+      margin-top: 6px;
+    }
 
 
-  return data || [];
-}
+    textarea {
+      min-height: 100px;
+      resize: vertical;
+    }
 
 
-/* =========================================
-   EXPORT
-========================================= */
+    label {
+      display: block;
+      margin-bottom: 18px;
+    }
 
-window.StandBookAdmin = {
-  createSlug,
-  createEvent,
-  getEvents
-};
+
+    .card {
+      border: 1px solid #ddd;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+
+
+    #new-event-panel {
+      margin-bottom: 40px;
+    }
+
+
+    #form-message {
+      min-height: 24px;
+    }
+
+
+    .event-meta {
+      color: #666;
+    }
+
+  </style>
+
+</head>
+
+
+<body>
+
+  <!-- LOADING -->
+
+  <p id="loading">
+    Kontrollerer adgang...
+  </p>
+
+
+  <!-- ADMIN -->
+
+  <main
+    id="admin-page"
+    hidden
+  >
+
+    <header>
+
+      <div>
+
+        <h1>
+          StandBook
+        </h1>
+
+        <p>
+          Logget ind som
+          <strong id="admin-name"></strong>
+          ·
+          <span id="admin-role"></span>
+        </p>
+
+      </div>
+
+
+      <button
+        id="logout-button"
+        type="button"
+      >
+        Log ud
+      </button>
+
+    </header>
+
+
+
+    <!-- NYT ARRANGEMENT -->
+
+    <section>
+
+      <button
+        id="show-new-event"
+        type="button"
+      >
+        + Nyt arrangement
+      </button>
+
+
+      <div
+        id="new-event-panel"
+        hidden
+      >
+
+        <h2>
+          Nyt arrangement
+        </h2>
+
+
+        <form id="new-event-form">
+
+
+          <label>
+
+            Arrangementets navn
+
+            <input
+              id="event-title"
+              type="text"
+              required
+              placeholder="Fx Standforkyndelse ved Byfesten"
+            >
+
+          </label>
+
+
+
+          <label>
+
+            Beskrivelse
+
+            <textarea
+              id="event-description"
+              placeholder="Kort beskrivelse af arrangementet"
+            ></textarea>
+
+          </label>
+
+
+
+          <label>
+
+            URL-navn
+
+            <input
+              id="event-slug"
+              type="text"
+              required
+              placeholder="byfest-2026"
+            >
+
+          </label>
+
+
+          <small>
+            Bookinglinket bliver senere:
+            /StandBook/<span id="slug-preview">...</span>
+          </small>
+
+
+          <br><br>
+
+
+          <label>
+
+            Vagtlængde
+
+            <select
+              id="shift-minutes"
+              required
+            >
+
+              <option value="30">
+                30 minutter
+              </option>
+
+              <option
+                value="60"
+                selected
+              >
+                1 time
+              </option>
+
+              <option value="90">
+                1½ time
+              </option>
+
+              <option value="120">
+                2 timer
+              </option>
+
+            </select>
+
+          </label>
+
+
+
+          <button type="submit">
+            Opret som kladde
+          </button>
+
+
+          <button
+            id="cancel-new-event"
+            type="button"
+          >
+            Annuller
+          </button>
+
+
+          <p id="form-message"></p>
+
+        </form>
+
+      </div>
+
+    </section>
+
+
+
+    <!-- ARRANGEMENTER -->
+
+    <section>
+
+      <h2>
+        Arrangementer
+      </h2>
+
+      <div id="events-list">
+
+        Henter arrangementer...
+
+      </div>
+
+    </section>
+
+  </main>
+
+
+
+  <!-- SUPABASE -->
+
+  <script
+    src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
+  </script>
+
+
+  <!-- STANDBOOK -->
+
+  <script src="js/config.js"></script>
+
+  <script src="js/supabase.js"></script>
+
+  <script src="js/auth.js?v=3"></script>
+
+  <script src="js/admin.js?v=1"></script>
+
+
+
+  <script>
+
+    let currentProfile = null;
+
+    let currentUser = null;
+
+
+
+    /* =====================================
+       VIS ARRANGEMENTER
+    ===================================== */
+
+    async function renderEvents() {
+
+      const container =
+        document.querySelector(
+          "#events-list"
+        );
+
+
+      container.textContent =
+        "Henter arrangementer...";
+
+
+      try {
+
+        const events =
+          await window
+            .StandBookAdmin
+            .getEvents();
+
+
+        if (events.length === 0) {
+
+          container.innerHTML =
+            "<p>Der er endnu ingen arrangementer.</p>";
+
+          return;
+        }
+
+
+        container.innerHTML =
+          events
+            .map(event => {
+
+              return `
+                <article class="card">
+
+                  <h3>
+                    ${escapeHtml(event.title)}
+                  </h3>
+
+                  <p class="event-meta">
+                    Status:
+                    <strong>
+                      ${escapeHtml(event.status)}
+                    </strong>
+                  </p>
+
+                  <p class="event-meta">
+                    URL:
+                    ${escapeHtml(event.slug)}
+                  </p>
+
+                  <p class="event-meta">
+                    Vagtlængde:
+                    ${event.shift_minutes} min.
+                  </p>
+
+                </article>
+              `;
+
+            })
+            .join("");
+
+
+      } catch (error) {
+
+        console.error(error);
+
+        container.textContent =
+          "Kunne ikke hente arrangementer: "
+          + error.message;
+      }
+    }
+
+
+
+    /* =====================================
+       SIKKER HTML
+    ===================================== */
+
+    function escapeHtml(value) {
+
+      const div =
+        document.createElement("div");
+
+      div.textContent =
+        value ?? "";
+
+      return div.innerHTML;
+    }
+
+
+
+    /* =====================================
+       START ADMIN
+    ===================================== */
+
+    async function startAdmin() {
+
+      try {
+
+        currentProfile =
+          await window
+            .StandBookAuth
+            .requireAdmin();
+
+
+        if (!currentProfile) {
+          return;
+        }
+
+
+        currentUser =
+          await window
+            .StandBookAuth
+            .getCurrentUser();
+
+
+        if (!currentUser) {
+
+          window.location.replace(
+            "login.html"
+          );
+
+          return;
+        }
+
+
+        document.querySelector(
+          "#admin-name"
+        ).textContent =
+          currentProfile.full_name;
+
+
+        document.querySelector(
+          "#admin-role"
+        ).textContent =
+          currentProfile.role;
+
+
+        document.querySelector(
+          "#loading"
+        ).hidden = true;
+
+
+        document.querySelector(
+          "#admin-page"
+        ).hidden = false;
+
+
+        await renderEvents();
+
+
+      } catch (error) {
+
+        console.error(
+          "Admin start error:",
+          error
+        );
+
+
+        window.location.replace(
+          "login.html"
+        );
+      }
+    }
+
+
+
+    /* =====================================
+       ÅBN FORM
+    ===================================== */
+
+    document
+      .querySelector("#show-new-event")
+      .addEventListener(
+        "click",
+        () => {
+
+          document.querySelector(
+            "#new-event-panel"
+          ).hidden = false;
+
+
+          document.querySelector(
+            "#show-new-event"
+          ).hidden = true;
+
+
+          document.querySelector(
+            "#event-title"
+          ).focus();
+
+        }
+      );
+
+
+
+    /* =====================================
+       ANNULLER FORM
+    ===================================== */
+
+    document
+      .querySelector("#cancel-new-event")
+      .addEventListener(
+        "click",
+        () => {
+
+          document.querySelector(
+            "#new-event-form"
+          ).reset();
+
+
+          document.querySelector(
+            "#new-event-panel"
+          ).hidden = true;
+
+
+          document.querySelector(
+            "#show-new-event"
+          ).hidden = false;
+
+
+          document.querySelector(
+            "#slug-preview"
+          ).textContent = "...";
+
+
+          document.querySelector(
+            "#form-message"
+          ).textContent = "";
+
+        }
+      );
+
+
+
+    /* =====================================
+       AUTO-GENERÉR SLUG
+    ===================================== */
+
+    document
+      .querySelector("#event-title")
+      .addEventListener(
+        "input",
+        event => {
+
+          const slug =
+            window
+              .StandBookAdmin
+              .createSlug(
+                event.target.value
+              );
+
+
+          document.querySelector(
+            "#event-slug"
+          ).value = slug;
+
+
+          document.querySelector(
+            "#slug-preview"
+          ).textContent =
+            slug || "...";
+
+        }
+      );
+
+
+
+    /* =====================================
+       MANUEL SLUG
+    ===================================== */
+
+    document
+      .querySelector("#event-slug")
+      .addEventListener(
+        "input",
+        event => {
+
+          const slug =
+            window
+              .StandBookAdmin
+              .createSlug(
+                event.target.value
+              );
+
+
+          event.target.value = slug;
+
+
+          document.querySelector(
+            "#slug-preview"
+          ).textContent =
+            slug || "...";
+
+        }
+      );
+
+
+
+    /* =====================================
+       OPRET ARRANGEMENT
+    ===================================== */
+
+    document
+      .querySelector("#new-event-form")
+      .addEventListener(
+        "submit",
+        async event => {
+
+          event.preventDefault();
+
+
+          const message =
+            document.querySelector(
+              "#form-message"
+            );
+
+
+          const submitButton =
+            event.target.querySelector(
+              'button[type="submit"]'
+            );
+
+
+          submitButton.disabled = true;
+
+          message.textContent =
+            "Opretter arrangement...";
+
+
+          try {
+
+            await window
+              .StandBookAdmin
+              .createEvent({
+
+                title:
+                  document.querySelector(
+                    "#event-title"
+                  ).value,
+
+                description:
+                  document.querySelector(
+                    "#event-description"
+                  ).value,
+
+                slug:
+                  document.querySelector(
+                    "#event-slug"
+                  ).value,
+
+                shiftMinutes:
+                  Number(
+                    document.querySelector(
+                      "#shift-minutes"
+                    ).value
+                  ),
+
+                userId:
+                  currentUser.id
+
+              });
+
+
+            message.textContent =
+              "✓ Arrangementet er oprettet som kladde.";
+
+
+            document.querySelector(
+              "#new-event-form"
+            ).reset();
+
+
+            document.querySelector(
+              "#slug-preview"
+            ).textContent = "...";
+
+
+            await renderEvents();
+
+
+            setTimeout(
+              () => {
+
+                document.querySelector(
+                  "#new-event-panel"
+                ).hidden = true;
+
+
+                document.querySelector(
+                  "#show-new-event"
+                ).hidden = false;
+
+
+                message.textContent = "";
+
+              },
+              1500
+            );
+
+
+          } catch (error) {
+
+            console.error(error);
+
+            message.textContent =
+              "Kunne ikke oprette arrangement: "
+              + error.message;
+
+          } finally {
+
+            submitButton.disabled = false;
+
+          }
+
+        }
+      );
+
+
+
+    /* =====================================
+       LOG UD
+    ===================================== */
+
+    document
+      .querySelector("#logout-button")
+      .addEventListener(
+        "click",
+        async () => {
+
+          await window
+            .StandBookAuth
+            .logout();
+
+        }
+      );
+
+
+
+    startAdmin();
+
+  </script>
+
+</body>
+
+</html>

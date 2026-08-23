@@ -1,1 +1,120 @@
+<!DOCTYPE html>
+<html lang="da">
 
+<head>
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <title>Administration – StandBook</title>
+</head>
+
+<body>
+
+  <h1>StandBook</h1>
+
+  <p id="status">
+    Kontrollerer login...
+  </p>
+
+  <div
+    id="admin-content"
+    hidden
+  >
+
+    <h2>
+      ✓ Du er logget ind
+    </h2>
+
+    <p>
+      Navn:
+      <strong id="admin-name"></strong>
+    </p>
+
+    <p>
+      Rolle:
+      <strong id="admin-role"></strong>
+    </p>
+
+    <button id="logout-button">
+      Log ud
+    </button>
+
+  </div>
+
+
+  <script
+    src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
+  </script>
+
+  <script src="js/config.js"></script>
+  <script src="js/supabase.js"></script>
+  <script src="js/auth.js"></script>
+
+
+  <script>
+    async function initializeAdmin() {
+
+      const status =
+        document.querySelector("#status");
+
+      const content =
+        document.querySelector("#admin-content");
+
+
+      try {
+
+        const profile =
+          await window.StandBookAuth.requireAdmin();
+
+        if (!profile) {
+          return;
+        }
+
+
+        document.querySelector(
+          "#admin-name"
+        ).textContent =
+          profile.full_name;
+
+
+        document.querySelector(
+          "#admin-role"
+        ).textContent =
+          profile.role;
+
+
+        status.textContent =
+          "Admin-adgang godkendt.";
+
+        content.hidden = false;
+
+
+      } catch (error) {
+
+        console.error(error);
+
+        status.textContent =
+          "Der opstod en fejl.";
+      }
+    }
+
+
+    document.querySelector(
+      "#logout-button"
+    ).addEventListener(
+      "click",
+      () => {
+        window.StandBookAuth.logout();
+      }
+    );
+
+
+    initializeAdmin();
+  </script>
+
+</body>
+</html>

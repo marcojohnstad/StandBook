@@ -1,1 +1,70 @@
+<!DOCTYPE html>
+<html lang="da">
 
+<head>
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <title>StandBook – Test</title>
+</head>
+
+<body>
+
+  <h1>StandBook</h1>
+
+  <p id="status">
+    Tester forbindelse til Supabase...
+  </p>
+
+  <script
+    src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
+  </script>
+
+  <script src="js/config.js"></script>
+  <script src="js/supabase.js"></script>
+
+  <script>
+    async function testConnection() {
+
+      const status =
+        document.querySelector("#status");
+
+      try {
+
+        const { data, error } =
+          await window.standbookSupabase
+            .from("events")
+            .select("id, title")
+            .limit(1);
+
+        if (error) {
+          throw error;
+        }
+
+        status.textContent =
+          "✓ Forbindelsen til Supabase virker!";
+
+        console.log(
+          "StandBook database test:",
+          data
+        );
+
+      } catch (error) {
+
+        console.error(error);
+
+        status.textContent =
+          "✕ Kunne ikke forbinde til Supabase: "
+          + error.message;
+      }
+    }
+
+    testConnection();
+  </script>
+
+</body>
+</html>

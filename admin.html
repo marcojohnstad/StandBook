@@ -1,120 +1,160 @@
-<!DOCTYPE html>
-<html lang="da">
+"use strict";
 
-<head>
-  <meta charset="UTF-8">
-
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0"
-  >
-
-  <title>Administration – StandBook</title>
-</head>
-
-<body>
-
-  <h1>StandBook</h1>
-
-  <p id="status">
-    Kontrollerer login...
-  </p>
-
-  <div
-    id="admin-content"
-    hidden
-  >
-
-    <h2>
-      ✓ Du er logget ind
-    </h2>
-
-    <p>
-      Navn:
-      <strong id="admin-name"></strong>
-    </p>
-
-    <p>
-      Rolle:
-      <strong id="admin-role"></strong>
-    </p>
-
-    <button id="logout-button">
-      Log ud
-    </button>
-
-  </div>
+const db = window.standbookSupabase;
 
 
-  <script
-    src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
-  </script>
+/* =========================================
+   HJÆLPEFUNKTIONER
+========================================= */
 
-  <script src="js/config.js"></script>
-  <script src="js/supabase.js"></script>
-  <script src="js/auth.js"></script>
+function createSlug(text) {
 
+  return text
+    .toLowerCase()
+    .trim()
 
-  <script>
-    async function initializeAdmin() {
+    // Danske bogstaver
+    .replace(/æ/g, "ae")
+    .replace(/ø/g, "oe")
+    .replace(/å/g, "aa")
 
-      const status =
-        document.querySelector("#status");
+    // Alt andet end bogstaver/tal bliver -
+    .replace(/[^a-z0-9]+/g, "-")
 
-      const content =
-        document.querySelector("#admin-content");
-
-
-      try {
-
-        const profile =
-          await window.StandBookAuth.requireAdmin();
-
-        if (!profile) {
-          return;
-        }
+    // Fjern - i starten/slutningen
+    .replace(/^-+|-+$/g, "");
+}
 
 
-        document.querySelector(
-          "#admin-name"
-        ).textContent =
-          profile.full_name;
+/* =========================================
+   OPRET ARRANGEMENT
+========================================= */
+
+async function createEvent({
+  title,
+  description,
+  slug,
+  shiftMinutes,
+  userId
+}) {
+
+  const cleanTitle = title.trim();
+  const cleanDescription = description.trim();
+  const cleanSlug = slug.trim();
 
 
-        document.querySelector(
-          "#admin-role"
-        ).textContent =
-          profile.role;
+  if (!cleanTitle) {
+    throw new Error(
+      "Arrangementet skal have et navn."
+    );
+  }
 
 
-        status.textContent =
-          "Admin-adgang godkendt.";
+  if (!cleanSlug) {
+    throw new Error(
+      "Arrangementet skal have et URL-navn."
+    );
+  }
 
-        content.hidden = false;
+
+  if (
+    !Number.isInteger(shiftMinutes) ||
+    shiftMinutes < 15 ||
+    shiftMinutes > 480
+  ) {
+    throw new Error(
+      "Vagtlængden er ugyldig."
+    );
+  }
 
 
-      } catch (error) {
+  const {
+    data,
+    error
+  } = await db
+    .from("events")
+    .insert({
+      title: cleanTitle,
 
-        console.error(error);
+      description:
+        cleanDescription || null,
 
-        status.textContent =
-          "Der opstod en fejl.";
-      }
+      slug: cleanSlug,
+
+      status: "draft",
+
+      shift_minutes: shiftMinutes,
+
+      created_by: userId
+    })
+    .select()
+    .single();
+
+
+  if (error) {
+
+    /*
+      PostgreSQL-fejl 23505 betyder
+      typisk duplicate/unique constraint.
+    */
+
+    if (error.code === "23505") {
+
+      throw new Error(
+        "URL-navnet bruges allerede af et andet arrangement."
+      );
+
     }
 
+    throw error;
+  }
 
-    document.querySelector(
-      "#logout-button"
-    ).addEventListener(
-      "click",
-      () => {
-        window.StandBookAuth.logout();
-      }
+
+  return data;
+}
+
+
+/* =========================================
+   HENT ARRANGEMENTER
+========================================= */
+
+async function getEvents() {
+
+  const {
+    data,
+    error
+  } = await db
+    .from("events")
+    .select(`
+      id,
+      title,
+      description,
+      slug,
+      status,
+      shift_minutes,
+      created_at
+    `)
+    .order(
+      "created_at",
+      { ascending: false }
     );
 
 
-    initializeAdmin();
-  </script>
+  if (error) {
+    throw error;
+  }
 
-</body>
-</html>
+
+  return data || [];
+}
+
+
+/* =========================================
+   EXPORT
+========================================= */
+
+window.StandBookAdmin = {
+  createSlug,
+  createEvent,
+  getEvents
+};

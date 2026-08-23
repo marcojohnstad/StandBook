@@ -1,1 +1,859 @@
+<!DOCTYPE html>
+<html lang="da">
 
+<head>
+
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <title>Arrangement – StandBook</title>
+
+  <style>
+
+    body {
+      font-family:
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+
+      max-width: 760px;
+      margin: 40px auto;
+      padding: 20px;
+    }
+
+
+    button,
+    input {
+      font: inherit;
+    }
+
+
+    button {
+      cursor: pointer;
+      padding: 10px 16px;
+    }
+
+
+    input {
+      box-sizing: border-box;
+      width: 100%;
+      padding: 10px;
+      margin-top: 6px;
+    }
+
+
+    label {
+      display: block;
+      margin-bottom: 18px;
+    }
+
+
+    .card {
+      border: 1px solid #ddd;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+
+
+    .stand-card {
+      margin-top: 20px;
+    }
+
+
+    .day-card {
+      background: #f7f7f7;
+      border-radius: 8px;
+      padding: 14px;
+      margin-top: 10px;
+    }
+
+
+    .form-panel {
+      border: 1px solid #ddd;
+      border-radius: 12px;
+      padding: 20px;
+      margin-top: 20px;
+      margin-bottom: 30px;
+    }
+
+
+    .map-link {
+      display: inline-block;
+      margin-bottom: 12px;
+    }
+
+
+    .back-link {
+      display: inline-block;
+      margin-bottom: 30px;
+    }
+
+
+    #message {
+      min-height: 24px;
+    }
+
+  </style>
+
+</head>
+
+
+<body>
+
+  <p id="loading">
+    Henter arrangement...
+  </p>
+
+
+  <main
+    id="page"
+    hidden
+  >
+
+    <a
+      href="admin.html"
+      class="back-link"
+    >
+      ← Tilbage til arrangementer
+    </a>
+
+
+    <header>
+
+      <h1 id="event-title"></h1>
+
+      <p id="event-description"></p>
+
+      <p>
+        Status:
+        <strong id="event-status"></strong>
+      </p>
+
+      <p>
+        Vagtlængde:
+        <strong id="event-shift-length"></strong>
+      </p>
+
+    </header>
+
+
+    <hr>
+
+
+    <section>
+
+      <h2>
+        Stande
+      </h2>
+
+      <div id="stands-list">
+        Henter stande...
+      </div>
+
+
+      <button
+        id="show-stand-form"
+        type="button"
+      >
+        + Tilføj stand
+      </button>
+
+
+      <div
+        id="stand-form-panel"
+        class="form-panel"
+        hidden
+      >
+
+        <h3>
+          Ny stand
+        </h3>
+
+
+        <form id="stand-form">
+
+          <label>
+
+            Standens navn
+
+            <input
+              id="stand-name"
+              type="text"
+              required
+              placeholder="Fx Torvet"
+            >
+
+          </label>
+
+
+          <label>
+
+            Adresse
+
+            <input
+              id="stand-address"
+              type="text"
+              required
+              placeholder="Fx Adelgade 1, 5400 Bogense"
+            >
+
+          </label>
+
+
+          <button type="submit">
+            Opret stand
+          </button>
+
+
+          <button
+            id="cancel-stand"
+            type="button"
+          >
+            Annuller
+          </button>
+
+        </form>
+
+      </div>
+
+    </section>
+
+
+    <p id="message"></p>
+
+  </main>
+
+
+
+  <script
+    src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
+  </script>
+
+  <script src="js/config.js"></script>
+
+  <script src="js/supabase.js"></script>
+
+  <script src="js/auth.js?v=4"></script>
+
+  <script src="js/admin.js?v=2"></script>
+
+
+
+  <script>
+
+    let currentEvent = null;
+
+
+    function escapeHtml(value) {
+
+      const div =
+        document.createElement("div");
+
+      div.textContent =
+        value ?? "";
+
+      return div.innerHTML;
+    }
+
+
+    function formatTime(value) {
+
+      if (!value) {
+        return "";
+      }
+
+      return value.slice(0, 5).replace(":", ".");
+    }
+
+
+    function formatDate(value) {
+
+      const date =
+        new Date(value + "T12:00:00");
+
+      return new Intl.DateTimeFormat(
+        "da-DK",
+        {
+          weekday: "long",
+          day: "numeric",
+          month: "long",
+          year: "numeric"
+        }
+      ).format(date);
+    }
+
+
+    function getEventId() {
+
+      const params =
+        new URLSearchParams(
+          window.location.search
+        );
+
+      const id =
+        Number(params.get("id"));
+
+      if (!Number.isInteger(id) || id < 1) {
+        return null;
+      }
+
+      return id;
+    }
+
+
+    async function renderStands() {
+
+      const container =
+        document.querySelector(
+          "#stands-list"
+        );
+
+      container.textContent =
+        "Henter stande...";
+
+
+      try {
+
+        const stands =
+          await window
+            .StandBookAdmin
+            .getStands(currentEvent.id);
+
+
+        const days =
+          await window
+            .StandBookAdmin
+            .getEventDays(currentEvent.id);
+
+
+        if (stands.length === 0) {
+
+          container.innerHTML =
+            "<p>Der er endnu ingen stande.</p>";
+
+          return;
+        }
+
+
+        container.innerHTML =
+          stands
+            .map(stand => {
+
+              const standDays =
+                days.filter(
+                  day =>
+                    day.stand_id === stand.id
+                );
+
+
+              const dayHtml =
+                standDays.length
+                  ? standDays
+                      .map(day => `
+                        <div class="day-card">
+
+                          <strong>
+                            ${escapeHtml(
+                              formatDate(
+                                day.event_date
+                              )
+                            )}
+                          </strong>
+
+                          <br>
+
+                          ${formatTime(day.opens_at)}
+                          –
+                          ${formatTime(day.closes_at)}
+
+                        </div>
+                      `)
+                      .join("")
+
+                  : `
+                    <p>
+                      Ingen åbningstider endnu.
+                    </p>
+                  `;
+
+
+              return `
+                <article class="card stand-card">
+
+                  <h3>
+                    ${escapeHtml(stand.name)}
+                  </h3>
+
+                  <p>
+                    ${escapeHtml(stand.address)}
+                  </p>
+
+                  <a
+                    class="map-link"
+                    href="${window
+                      .StandBookAdmin
+                      .createMapUrl(
+                        stand.address
+                      )}"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Se på kort ↗
+                  </a>
+
+
+                  <h4>
+                    Åbningstider
+                  </h4>
+
+                  ${dayHtml}
+
+
+                  <button
+                    type="button"
+                    class="add-day-button"
+                    data-stand-id="${stand.id}"
+                  >
+                    + Tilføj dag
+                  </button>
+
+
+                  <div
+                    class="day-form"
+                    id="day-form-${stand.id}"
+                    hidden
+                  >
+
+                    <br>
+
+                    <label>
+
+                      Dato
+
+                      <input
+                        type="date"
+                        class="day-date"
+                      >
+
+                    </label>
+
+
+                    <label>
+
+                      Fra
+
+                      <input
+                        type="time"
+                        class="day-open"
+                      >
+
+                    </label>
+
+
+                    <label>
+
+                      Til
+
+                      <input
+                        type="time"
+                        class="day-close"
+                      >
+
+                    </label>
+
+
+                    <button
+                      type="button"
+                      class="save-day-button"
+                      data-stand-id="${stand.id}"
+                    >
+                      Gem åbningstid
+                    </button>
+
+                  </div>
+
+                </article>
+              `;
+
+            })
+            .join("");
+
+
+        attachStandListeners();
+
+
+      } catch (error) {
+
+        console.error(error);
+
+        container.textContent =
+          "Kunne ikke hente standene: "
+          + error.message;
+      }
+    }
+
+
+    function attachStandListeners() {
+
+      document
+        .querySelectorAll(
+          ".add-day-button"
+        )
+        .forEach(button => {
+
+          button.addEventListener(
+            "click",
+            () => {
+
+              const standId =
+                button.dataset.standId;
+
+              document.querySelector(
+                "#day-form-" + standId
+              ).hidden = false;
+
+              button.hidden = true;
+            }
+          );
+
+        });
+
+
+      document
+        .querySelectorAll(
+          ".save-day-button"
+        )
+        .forEach(button => {
+
+          button.addEventListener(
+            "click",
+            async () => {
+
+              const standId =
+                Number(
+                  button.dataset.standId
+                );
+
+              const form =
+                document.querySelector(
+                  "#day-form-" + standId
+                );
+
+              const message =
+                document.querySelector(
+                  "#message"
+                );
+
+
+              button.disabled = true;
+
+              message.textContent =
+                "Gemmer åbningstid...";
+
+
+              try {
+
+                await window
+                  .StandBookAdmin
+                  .addStandDay({
+
+                    eventId:
+                      currentEvent.id,
+
+                    standId:
+                      standId,
+
+                    eventDate:
+                      form.querySelector(
+                        ".day-date"
+                      ).value,
+
+                    opensAt:
+                      form.querySelector(
+                        ".day-open"
+                      ).value,
+
+                    closesAt:
+                      form.querySelector(
+                        ".day-close"
+                      ).value
+
+                  });
+
+
+                message.textContent =
+                  "✓ Åbningstiden er gemt.";
+
+
+                await renderStands();
+
+
+                setTimeout(
+                  () => {
+                    message.textContent = "";
+                  },
+                  2000
+                );
+
+
+              } catch (error) {
+
+                console.error(error);
+
+                message.textContent =
+                  "Kunne ikke gemme: "
+                  + error.message;
+
+              } finally {
+
+                button.disabled = false;
+
+              }
+
+            }
+          );
+
+        });
+    }
+
+
+    async function startPage() {
+
+      const profile =
+        await window
+          .StandBookAuth
+          .requireAdmin();
+
+
+      if (!profile) {
+        return;
+      }
+
+
+      const eventId =
+        getEventId();
+
+
+      if (!eventId) {
+
+        document.querySelector(
+          "#loading"
+        ).textContent =
+          "Arrangementet blev ikke fundet.";
+
+        return;
+      }
+
+
+      try {
+
+        currentEvent =
+          await window
+            .StandBookAdmin
+            .getEvent(eventId);
+
+
+        document.querySelector(
+          "#event-title"
+        ).textContent =
+          currentEvent.title;
+
+
+        document.querySelector(
+          "#event-description"
+        ).textContent =
+          currentEvent.description || "";
+
+
+        document.querySelector(
+          "#event-status"
+        ).textContent =
+          currentEvent.status;
+
+
+        document.querySelector(
+          "#event-shift-length"
+        ).textContent =
+          currentEvent.shift_minutes
+          + " minutter";
+
+
+        document.querySelector(
+          "#loading"
+        ).hidden = true;
+
+
+        document.querySelector(
+          "#page"
+        ).hidden = false;
+
+
+        await renderStands();
+
+
+      } catch (error) {
+
+        console.error(error);
+
+        document.querySelector(
+          "#loading"
+        ).textContent =
+          "Kunne ikke hente arrangementet: "
+          + error.message;
+      }
+    }
+
+
+    document
+      .querySelector("#show-stand-form")
+      .addEventListener(
+        "click",
+        () => {
+
+          document.querySelector(
+            "#stand-form-panel"
+          ).hidden = false;
+
+          document.querySelector(
+            "#show-stand-form"
+          ).hidden = true;
+
+          document.querySelector(
+            "#stand-name"
+          ).focus();
+
+        }
+      );
+
+
+    document
+      .querySelector("#cancel-stand")
+      .addEventListener(
+        "click",
+        () => {
+
+          document.querySelector(
+            "#stand-form"
+          ).reset();
+
+          document.querySelector(
+            "#stand-form-panel"
+          ).hidden = true;
+
+          document.querySelector(
+            "#show-stand-form"
+          ).hidden = false;
+
+        }
+      );
+
+
+    document
+      .querySelector("#stand-form")
+      .addEventListener(
+        "submit",
+        async event => {
+
+          event.preventDefault();
+
+
+          const message =
+            document.querySelector(
+              "#message"
+            );
+
+
+          const submit =
+            event.target.querySelector(
+              'button[type="submit"]'
+            );
+
+
+          submit.disabled = true;
+
+          message.textContent =
+            "Opretter stand...";
+
+
+          try {
+
+            await window
+              .StandBookAdmin
+              .createStand({
+
+                eventId:
+                  currentEvent.id,
+
+                name:
+                  document.querySelector(
+                    "#stand-name"
+                  ).value,
+
+                address:
+                  document.querySelector(
+                    "#stand-address"
+                  ).value
+
+              });
+
+
+            event.target.reset();
+
+
+            document.querySelector(
+              "#stand-form-panel"
+            ).hidden = true;
+
+
+            document.querySelector(
+              "#show-stand-form"
+            ).hidden = false;
+
+
+            message.textContent =
+              "✓ Standen er oprettet.";
+
+
+            await renderStands();
+
+
+            setTimeout(
+              () => {
+                message.textContent = "";
+              },
+              2000
+            );
+
+
+          } catch (error) {
+
+            console.error(error);
+
+            message.textContent =
+              "Kunne ikke oprette standen: "
+              + error.message;
+
+          } finally {
+
+            submit.disabled = false;
+
+          }
+
+        }
+      );
+
+
+    startPage();
+
+  </script>
+
+</body>
+
+</html>

@@ -2,7 +2,6 @@
 <html lang="da">
 
 <head>
-
   <meta charset="UTF-8">
 
   <meta
@@ -13,7 +12,6 @@
   <title>Arrangement – StandBook</title>
 
   <style>
-
     body {
       font-family:
         system-ui,
@@ -67,6 +65,14 @@
       margin-top: 10px;
     }
 
+    .shift-card {
+      background: #fafafa;
+      border: 1px solid #e5e5e5;
+      border-radius: 8px;
+      padding: 12px;
+      margin-top: 8px;
+    }
+
     .form-panel {
       border: 1px solid #ddd;
       border-radius: 12px;
@@ -89,17 +95,17 @@
       min-height: 24px;
     }
 
+    #shift-section {
+      margin-top: 40px;
+    }
   </style>
-
 </head>
-
 
 <body>
 
   <p id="loading">
     Henter arrangement...
   </p>
-
 
   <main
     id="page"
@@ -112,7 +118,6 @@
     >
       ← Tilbage til arrangementer
     </a>
-
 
     <header>
 
@@ -132,9 +137,7 @@
 
     </header>
 
-
     <hr>
-
 
     <section>
 
@@ -146,14 +149,12 @@
         Henter stande...
       </div>
 
-
       <button
         id="show-stand-form"
         type="button"
       >
         + Tilføj stand
       </button>
-
 
       <div
         id="stand-form-panel"
@@ -165,11 +166,9 @@
           Ny stand
         </h3>
 
-
         <form id="stand-form">
 
           <label>
-
             Standens navn
 
             <input
@@ -178,12 +177,9 @@
               required
               placeholder="Fx Torvet"
             >
-
           </label>
 
-
           <label>
-
             Adresse
 
             <input
@@ -192,14 +188,11 @@
               required
               placeholder="Fx Adelgade 1, 5400 Bogense"
             >
-
           </label>
-
 
           <button type="submit">
             Opret stand
           </button>
-
 
           <button
             id="cancel-stand"
@@ -214,26 +207,44 @@
 
     </section>
 
+    <section id="shift-section">
+
+      <hr>
+
+      <h2>
+        Vagter
+      </h2>
+
+      <p>
+        Generér automatisk vagter ud fra standenes
+        åbningstider og arrangementets vagtlængde.
+      </p>
+
+      <button
+        id="generate-shifts-button"
+        type="button"
+      >
+        Generér vagter
+      </button>
+
+      <div id="shifts-list">
+        <p>Ingen vagter hentet endnu.</p>
+      </div>
+
+    </section>
 
     <p id="message"></p>
 
   </main>
-
-
 
   <script
     src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
   </script>
 
   <script src="js/config.js"></script>
-
   <script src="js/supabase.js"></script>
-
-  <script src="js/auth.js?v=4"></script>
-
-  <script src="js/admin.js?v=2"></script>
-
-
+  <script src="js/auth.js?v=5"></script>
+  <script src="js/admin.js?v=3"></script>
 
   <script>
 
@@ -241,7 +252,6 @@
 
 
     function escapeHtml(value) {
-
       const div =
         document.createElement("div");
 
@@ -253,7 +263,6 @@
 
 
     function formatTime(value) {
-
       if (!value) {
         return "";
       }
@@ -265,7 +274,6 @@
 
 
     function formatDate(value) {
-
       const date =
         new Date(
           value + "T12:00:00"
@@ -284,7 +292,6 @@
 
 
     function getEventId() {
-
       const params =
         new URLSearchParams(
           window.location.search
@@ -316,7 +323,6 @@
       container.textContent =
         "Henter stande...";
 
-
       try {
 
         const stands =
@@ -326,14 +332,12 @@
               currentEvent.id
             );
 
-
         const days =
           await window
             .StandBookAdmin
             .getEventDays(
               currentEvent.id
             );
-
 
         if (stands.length === 0) {
 
@@ -342,7 +346,6 @@
 
           return;
         }
-
 
         container.innerHTML =
           stands
@@ -353,7 +356,6 @@
                   day =>
                     day.stand_id === stand.id
                 );
-
 
               const dayHtml =
                 standDays.length
@@ -382,13 +384,11 @@
                         </div>
                       `)
                       .join("")
-
                   : `
                     <p>
                       Ingen åbningstider endnu.
                     </p>
                   `;
-
 
               return `
                 <article
@@ -420,13 +420,11 @@
                     Se på kort ↗
                   </a>
 
-
                   <h4>
                     Åbningstider
                   </h4>
 
                   ${dayHtml}
-
 
                   <button
                     type="button"
@@ -435,7 +433,6 @@
                   >
                     + Tilføj dag
                   </button>
-
 
                   <div
                     class="day-form"
@@ -446,40 +443,31 @@
                     <br>
 
                     <label>
-
                       Dato
 
                       <input
                         type="date"
                         class="day-date"
                       >
-
                     </label>
 
-
                     <label>
-
                       Fra
 
                       <input
                         type="time"
                         class="day-open"
                       >
-
                     </label>
 
-
                     <label>
-
                       Til
 
                       <input
                         type="time"
                         class="day-close"
                       >
-
                     </label>
-
 
                     <button
                       type="button"
@@ -497,9 +485,7 @@
             })
             .join("");
 
-
         attachStandListeners();
-
 
       } catch (error) {
 
@@ -563,12 +549,10 @@
                   "#message"
                 );
 
-
               button.disabled = true;
 
               message.textContent =
                 "Gemmer åbningstid...";
-
 
               try {
 
@@ -599,13 +583,10 @@
 
                   });
 
-
                 message.textContent =
                   "✓ Åbningstiden er gemt.";
 
-
                 await renderStands();
-
 
                 setTimeout(
                   () => {
@@ -613,7 +594,6 @@
                   },
                   2000
                 );
-
 
               } catch (error) {
 
@@ -636,6 +616,194 @@
     }
 
 
+    async function renderShifts() {
+
+      const container =
+        document.querySelector(
+          "#shifts-list"
+        );
+
+      container.innerHTML =
+        "<p>Henter vagter...</p>";
+
+      const { data, error } =
+        await window
+          .standbookSupabase
+          .from("shifts")
+          .select(`
+            id,
+            stand_id,
+            event_day_id,
+            start_time,
+            end_time,
+            capacity,
+            is_closed,
+            event_days (
+              event_date
+            ),
+            stands (
+              name
+            )
+          `)
+          .eq(
+            "event_id",
+            currentEvent.id
+          )
+          .order(
+            "event_day_id",
+            { ascending: true }
+          )
+          .order(
+            "start_time",
+            { ascending: true }
+          );
+
+      if (error) {
+
+        console.error(error);
+
+        container.innerHTML =
+          "<p>Kunne ikke hente vagterne: "
+          + escapeHtml(error.message)
+          + "</p>";
+
+        return;
+      }
+
+
+      if (!data || data.length === 0) {
+
+        container.innerHTML =
+          "<p>Der er endnu ingen genererede vagter.</p>";
+
+        return;
+      }
+
+
+      container.innerHTML =
+        data
+          .map(shift => {
+
+            const standName =
+              shift.stands?.name
+              || "Ukendt stand";
+
+            const eventDate =
+              shift.event_days?.event_date
+              || "";
+
+            return `
+              <div class="shift-card">
+
+                <strong>
+                  ${escapeHtml(
+                    formatDate(
+                      eventDate
+                    )
+                  )}
+                </strong>
+
+                <br>
+
+                ${escapeHtml(
+                  standName
+                )}
+
+                <br>
+
+                ${formatTime(
+                  shift.start_time
+                )}
+                –
+                ${formatTime(
+                  shift.end_time
+                )}
+
+                <br>
+
+                Pladser:
+                ${shift.capacity}
+
+                ${
+                  shift.is_closed
+                    ? "<br><strong>Lukket</strong>"
+                    : ""
+                }
+
+              </div>
+            `;
+
+          })
+          .join("");
+    }
+
+
+    async function generateShifts() {
+
+      const button =
+        document.querySelector(
+          "#generate-shifts-button"
+        );
+
+      const message =
+        document.querySelector(
+          "#message"
+        );
+
+      button.disabled = true;
+
+      message.textContent =
+        "Genererer vagter...";
+
+      try {
+
+        const {
+          data,
+          error
+        } =
+          await window
+            .standbookSupabase
+            .rpc(
+              "generate_shifts_for_event",
+              {
+                target_event_id:
+                  currentEvent.id
+              }
+            );
+
+        if (error) {
+          throw error;
+        }
+
+        message.textContent =
+          "✓ " + data
+          + " vagter blev genereret.";
+
+        await renderShifts();
+
+        setTimeout(
+          () => {
+            message.textContent = "";
+          },
+          3000
+        );
+
+      } catch (error) {
+
+        console.error(error);
+
+        message.textContent =
+          "Kunne ikke generere vagter: "
+          + error.message;
+
+      } finally {
+
+        button.disabled = false;
+
+      }
+    }
+
+
     async function startPage() {
 
       const profile =
@@ -643,15 +811,12 @@
           .StandBookAuth
           .requireAdmin();
 
-
       if (!profile) {
         return;
       }
 
-
       const eventId =
         getEventId();
-
 
       if (!eventId) {
 
@@ -663,7 +828,6 @@
         return;
       }
 
-
       try {
 
         currentEvent =
@@ -673,24 +837,20 @@
               eventId
             );
 
-
         document.querySelector(
           "#event-title"
         ).textContent =
           currentEvent.title;
-
 
         document.querySelector(
           "#event-description"
         ).textContent =
           currentEvent.description || "";
 
-
         document.querySelector(
           "#event-status"
         ).textContent =
           currentEvent.status;
-
 
         document.querySelector(
           "#event-shift-length"
@@ -698,19 +858,16 @@
           currentEvent.shift_minutes
           + " minutter";
 
-
         document.querySelector(
           "#loading"
         ).hidden = true;
-
 
         document.querySelector(
           "#page"
         ).hidden = false;
 
-
         await renderStands();
-
+        await renderShifts();
 
       } catch (error) {
 
@@ -783,24 +940,20 @@
 
           event.preventDefault();
 
-
           const message =
             document.querySelector(
               "#message"
             );
-
 
           const submit =
             event.target.querySelector(
               'button[type="submit"]'
             );
 
-
           submit.disabled = true;
 
           message.textContent =
             "Opretter stand...";
-
 
           try {
 
@@ -823,26 +976,20 @@
 
               });
 
-
             event.target.reset();
-
 
             document.querySelector(
               "#stand-form-panel"
             ).hidden = true;
 
-
             document.querySelector(
               "#show-stand-form"
             ).hidden = false;
 
-
             message.textContent =
               "✓ Standen er oprettet.";
 
-
             await renderStands();
-
 
             setTimeout(
               () => {
@@ -850,7 +997,6 @@
               },
               2000
             );
-
 
           } catch (error) {
 
@@ -870,10 +1016,19 @@
       );
 
 
+    document
+      .querySelector(
+        "#generate-shifts-button"
+      )
+      .addEventListener(
+        "click",
+        generateShifts
+      );
+
+
     startPage();
 
   </script>
 
 </body>
-
 </html>

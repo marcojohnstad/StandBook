@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="da">
+
+<head>
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <title>StandBook</title>
+
+  <style>
+    body {
+      font-family:
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 32px 18px 60px;
+      background: #f6f7f4;
+      color: #20231f;
+    }
+
+    h1 {
+      margin-bottom: 8px;
+    }
+
+    button {
+      font: inherit;
+      cursor: pointer;
+    }
+
+    .event-description {
+      color: #60655f;
+      line-height: 1.6;
+    }
+
+    .day-tabs {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      margin: 28px 0 20px;
+    }
+
+    .day-tab {
+      border: 1px solid #d8ddd7;
+      border-radius: 12px;
+      padding: 10px 14px;
+      background: white;
+      white-space: nowrap;
+    }
+
+    .day-tab.active {
+      background: #254d3b;
+      color: white;
+      border-color: #254d3b;
+    }
+
+    .time-group {
+      margin-bottom: 26px;
+    }
+
+    .time-heading {
+      margin: 0 0 10px;
+      font-size: 1.15rem;
+    }
+
+    .stand-card {
+      border: 1px solid #dfe3de;
+      border-radius: 16px;
+      padding: 18px;
+      margin-bottom: 10px;
+      background: white;
+    }
+
+    .stand-card h3 {
+      margin: 0 0 6px;
+    }
+
+    .address {
+      margin: 0 0 6px;
+      color: #666b65;
+    }
+
+    .map-link {
+      display: inline-block;
+      margin-bottom: 16px;
+      color: #254d3b;
+      font-weight: 600;
+    }
+
+    .people {
+      display: grid;
+      gap: 7px;
+      margin-top: 10px;
+    }
+
+    .person {
+      padding: 10px 12px;
+      border-radius: 10px;
+      background: #f1f3f0;
+    }
+
+    .person.empty {
+      border: 1px dashed #c8cec7;
+      background: transparent;
+      color: #747a73;
+    }
+
+    .status {
+      display: inline-block;
+      margin-top: 14px;
+      padding: 5px 9px;
+      border-radius: 999px;
+      font-size: 0.8rem;
+      font-weight: 700;
+    }
+
+    .status.open {
+      color: #17633e;
+      background: #e6f4eb;
+    }
+
+    .status.partial {
+      color: #7a5a00;
+      background: #fff3cd;
+    }
+
+    .status.full {
+      color: #656965;
+      background: #ededed;
+    }
+
+    .status.closed {
+      color: #656965;
+      background: #ededed;
+    }
+
+    .book-button {
+      width: 100%;
+      margin-top: 14px;
+      padding: 11px 14px;
+      border: 0;
+      border-radius: 11px;
+      background: #254d3b;
+      color: white;
+      font-weight: 700;
+    }
+
+    .book-button:disabled {
+      cursor: not-allowed;
+      background: #b8bdb8;
+    }
+
+    #loading,
+    #error-message {
+      padding: 30px 0;
+    }
+
+    #error-message {
+      color: #a21d18;
+    }
+  </style>
+</head>
+
+
+<body>
+
+  <p id="loading">
+    Henter arrangement...
+  </p>
+
+  <p
+    id="error-message"
+    hidden
+  ></p>
+
+
+  <main
+    id="page"
+    hidden
+  >
+
+    <header>
+
+      <p>
+        <strong>StandBook</strong>
+      </p>
+
+      <h1 id="event-title"></h1>
+
+      <p
+        id="event-description"
+        class="event-description"
+      ></p>
+
+    </header>
+
+
+    <nav
+      id="day-tabs"
+      class="day-tabs"
+      aria-label="Vælg dag"
+    ></nav>
+
+
+    <section id="schedule"></section>
+
+  </main>
+
+
+  <script
+    src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
+  </script>
+
+  <script src="js/config.js"></script>
+  <script src="js/supabase.js"></script>
+  <script src="js/booking.js?v=1"></script>
+
+
+  <script>
+
+    let currentEvent = null;
+    let stands = [];
+    let eventDays = [];
+    let shifts = [];
+    let bookings = [];
+
+    let selectedDate = null;
+
+
+    function escapeHtml(value) {
+
+      const div =
+        document.createElement("div");
+
+      div.textContent =
+        value ?? "";
+
+      return div.innerHTML;
+    }
+
+
+    function formatTime(value) {
+
+      if (!value) {
+        return "";
+      }
+
+      return value
+        .slice(0, 5)
+        .replace(":", ".");
+    }
+
+
+    function formatDate(value) {
+
+      const date =
+        new Date(
+          value + "T12:00:00"
+        );
+
+      return new Intl.DateTimeFormat(
+        "da-DK",
+        {
+          weekday: "long",
+          day: "numeric",
+          month: "long"
+        }
+      ).format(date);
+    }
+
+
+    function getSlug() {
+
+      const params =
+        new URLSearchParams(
+          window.location.search
+        );
+
+      return params.get("event");
+    }
+
+
+    function getStand(standId) {
+
+      return stands.find(
+        stand => stand.id === standId
+      );
+    }
+
+
+    function getDay(dayId) {
+
+      return eventDays.find(
+        day => day.id === dayId
+      );
+    }
+
+
+    function getShiftBookings(shiftId) {
+
+      return bookings.filter(
+        booking =>
+          booking.shift_id === shiftId
+      );
+    }
+
+
+    function getAvailability(shift) {
+
+      const shiftBookings =
+        getShiftBookings(
+          shift.id
+        );
+
+      const remaining =
+        shift.capacity
+        - shiftBookings.length;
+
+
+      if (shift.is_closed) {
+
+        return {
+          remaining: 0,
+          label: "Lukket",
+          className: "closed"
+        };
+      }
+
+
+      if (remaining <= 0) {
+
+        return {
+          remaining: 0,
+          label: "Fuldt booket",
+          className: "full"
+        };
+      }
+
+
+      if (remaining === 1) {
+
+        return {
+          remaining: 1,
+          label: "1 ledig plads",
+          className: "partial"
+        };
+      }
+
+
+      return {
+        remaining: 2,
+        label: "2 ledige pladser",
+        className: "open"
+      };
+    }
+
+
+    function renderDayTabs() {
+
+      const container =
+        document.querySelector(
+          "#day-tabs"
+        );
+
+
+      const dates =
+        [
+          ...new Set(
+            eventDays.map(
+              day => day.event_date
+            )
+          )
+        ];
+
+
+      if (
+        !selectedDate &&
+        dates.length > 0
+      ) {
+        selectedDate = dates[0];
+      }
+
+
+      container.innerHTML =
+        dates
+          .map(date => `
+            <button
+              type="button"
+              class="day-tab
+                ${
+                  date === selectedDate
+                    ? " active"
+                    : ""
+                }"
+              data-date="${date}"
+            >
+              ${escapeHtml(
+                formatDate(date)
+              )}
+            </button>
+          `)
+          .join("");
+
+
+      container
+        .querySelectorAll(
+          ".day-tab"
+        )
+        .forEach(button => {
+
+          button.addEventListener(
+            "click",
+            () => {
+
+              selectedDate =
+                button.dataset.date;
+
+              renderDayTabs();
+              renderSchedule();
+
+            }
+          );
+
+        });
+    }
+
+
+    function renderPersonSlots(shift) {
+
+      const shiftBookings =
+        getShiftBookings(
+          shift.id
+        );
+
+
+      const people = [];
+
+
+      for (
+        let i = 0;
+        i < shift.capacity;
+        i++
+      ) {
+
+        const booking =
+          shiftBookings[i];
+
+
+        if (booking) {
+
+          people.push(`
+            <div class="person">
+              ${escapeHtml(
+                booking.name
+              )}
+            </div>
+          `);
+
+        } else {
+
+          people.push(`
+            <div class="person empty">
+              Ledig plads
+            </div>
+          `);
+
+        }
+
+      }
+
+
+      return people.join("");
+    }
+
+
+    function renderSchedule() {
+
+      const container =
+        document.querySelector(
+          "#schedule"
+        );
+
+
+      const selectedDays =
+        eventDays.filter(
+          day =>
+            day.event_date ===
+            selectedDate
+        );
+
+
+      const selectedDayIds =
+        selectedDays.map(
+          day => day.id
+        );
+
+
+      const dayShifts =
+        shifts.filter(
+          shift =>
+            selectedDayIds.includes(
+              shift.event_day_id
+            )
+        );
+
+
+      if (dayShifts.length === 0) {
+
+        container.innerHTML =
+          "<p>Der er ingen vagter denne dag.</p>";
+
+        return;
+      }
+
+
+      const startTimes =
+        [
+          ...new Set(
+            dayShifts.map(
+              shift =>
+                shift.start_time
+            )
+          )
+        ].sort();
+
+
+      container.innerHTML =
+        startTimes
+          .map(startTime => {
+
+            const timeShifts =
+              dayShifts.filter(
+                shift =>
+                  shift.start_time ===
+                  startTime
+              );
+
+
+            const firstShift =
+              timeShifts[0];
+
+
+            const timeHeading =
+              formatTime(
+                firstShift.start_time
+              )
+              + "–"
+              + formatTime(
+                firstShift.end_time
+              );
+
+
+            const standHtml =
+              timeShifts
+                .map(shift => {
+
+                  const stand =
+                    getStand(
+                      shift.stand_id
+                    );
+
+
+                  if (!stand) {
+                    return "";
+                  }
+
+
+                  const availability =
+                    getAvailability(
+                      shift
+                    );
+
+
+                  return `
+                    <article class="stand-card">
+
+                      <h3>
+                        ${escapeHtml(
+                          stand.name
+                        )}
+                      </h3>
+
+                      <p class="address">
+                        ${escapeHtml(
+                          stand.address
+                        )}
+                      </p>
+
+                      <a
+                        class="map-link"
+                        href="${window
+                          .StandBookBooking
+                          .createMapUrl(
+                            stand.address
+                          )}"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        Se på kort ↗
+                      </a>
+
+
+                      <div class="people">
+                        ${renderPersonSlots(
+                          shift
+                        )}
+                      </div>
+
+
+                      <span
+                        class="status
+                          ${availability.className}"
+                      >
+                        ${availability.label}
+                      </span>
+
+
+                      ${
+                        availability.remaining > 0
+                          ? `
+                            <button
+                              type="button"
+                              class="book-button"
+                              data-shift-id="${shift.id}"
+                            >
+                              ${
+                                availability.remaining === 1
+                                  ? "Book ledig plads"
+                                  : "Vælg tidspunkt"
+                              }
+                            </button>
+                          `
+                          : ""
+                      }
+
+                    </article>
+                  `;
+
+                })
+                .join("");
+
+
+            return `
+              <section class="time-group">
+
+                <h2 class="time-heading">
+                  ${timeHeading}
+                </h2>
+
+                ${standHtml}
+
+              </section>
+            `;
+
+          })
+          .join("");
+
+
+      /*
+        Book-knapperne får deres funktion
+        i næste trin.
+      */
+
+      document
+        .querySelectorAll(
+          ".book-button"
+        )
+        .forEach(button => {
+
+          button.addEventListener(
+            "click",
+            () => {
+
+              alert(
+                "Bookingformularen kommer i næste trin."
+              );
+
+            }
+          );
+
+        });
+    }
+
+
+    async function startBookingPage() {
+
+      const slug =
+        getSlug();
+
+
+      if (!slug) {
+
+        document.querySelector(
+          "#loading"
+        ).hidden = true;
+
+
+        const error =
+          document.querySelector(
+            "#error-message"
+          );
+
+        error.textContent =
+          "Bookinglinket er ugyldigt.";
+
+        error.hidden = false;
+
+        return;
+      }
+
+
+      try {
+
+        currentEvent =
+          await window
+            .StandBookBooking
+            .getPublicEvent(
+              slug
+            );
+
+
+        [
+          stands,
+          eventDays,
+          shifts,
+          bookings
+        ] =
+          await Promise.all([
+
+            window
+              .StandBookBooking
+              .getPublicStands(
+                currentEvent.id
+              ),
+
+            window
+              .StandBookBooking
+              .getPublicEventDays(
+                currentEvent.id
+              ),
+
+            window
+              .StandBookBooking
+              .getPublicShifts(
+                currentEvent.id
+              ),
+
+            window
+              .StandBookBooking
+              .getPublicBookings(
+                currentEvent.id
+              )
+
+          ]);
+
+
+        document.querySelector(
+          "#event-title"
+        ).textContent =
+          currentEvent.title;
+
+
+        document.querySelector(
+          "#event-description"
+        ).textContent =
+          currentEvent.description
+          || "";
+
+
+        document.querySelector(
+          "#loading"
+        ).hidden = true;
+
+
+        document.querySelector(
+          "#page"
+        ).hidden = false;
+
+
+        renderDayTabs();
+
+        renderSchedule();
+
+
+      } catch (error) {
+
+        console.error(error);
+
+
+        document.querySelector(
+          "#loading"
+        ).hidden = true;
+
+
+        const message =
+          document.querySelector(
+            "#error-message"
+          );
+
+
+        message.textContent =
+          "Arrangementet kunne ikke hentes: "
+          + error.message;
+
+
+        message.hidden = false;
+
+      }
+    }
+
+
+    startBookingPage();
+
+  </script>
+
+</body>
+
+</html>

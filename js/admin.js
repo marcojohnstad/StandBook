@@ -319,6 +319,82 @@ async function addStandDay({
 
 
 /* =========================================
+   VAGTER
+========================================= */
+
+/**
+ * Sæt en vagt til enten 1 eller 2 pladser.
+ *
+ * Hvis vagten tidligere var lukket,
+ * åbnes den samtidig igen.
+ */
+async function setShiftCapacity(
+  shiftId,
+  capacity
+) {
+
+  if (
+    capacity !== 1 &&
+    capacity !== 2
+  ) {
+    throw new Error(
+      "En vagt skal have 1 eller 2 pladser."
+    );
+  }
+
+
+  const { data, error } = await db
+    .from("shifts")
+    .update({
+      capacity: capacity,
+      is_closed: false
+    })
+    .eq("id", shiftId)
+    .select()
+    .single();
+
+
+  if (error) {
+    throw error;
+  }
+
+
+  return data;
+}
+
+
+/**
+ * Luk eller genåbn en vagt.
+ *
+ * Kapaciteten ændres ikke, når vagten
+ * lukkes. Hvis den genåbnes, har den
+ * derfor samme kapacitet som før.
+ */
+async function setShiftClosed(
+  shiftId,
+  isClosed
+) {
+
+  const { data, error } = await db
+    .from("shifts")
+    .update({
+      is_closed: Boolean(isClosed)
+    })
+    .eq("id", shiftId)
+    .select()
+    .single();
+
+
+  if (error) {
+    throw error;
+  }
+
+
+  return data;
+}
+
+
+/* =========================================
    EXPORT
 ========================================= */
 
@@ -335,6 +411,9 @@ window.StandBookAdmin = {
   createStand,
 
   getEventDays,
-  addStandDay
+  addStandDay,
+
+  setShiftCapacity,
+  setShiftClosed
 
 };

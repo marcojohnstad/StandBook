@@ -2242,7 +2242,44 @@
 
   }
 }
+      async function performBooking({
+  shiftId,
+  firstName,
+  secondName,
+  bookBoth
+}) {
 
+  await window
+    .StandBookBooking
+    .bookShift({
+
+      shiftId:
+        shiftId,
+
+      firstName:
+        firstName,
+
+      secondName:
+        secondName,
+
+      bookBoth:
+        bookBoth
+
+    });
+
+
+  pendingBooking = null;
+
+
+  closeBookingModal();
+
+
+  await refreshBookings();
+
+
+  showSuccessToast();
+}
+    
       event.preventDefault();
 
 
@@ -2543,6 +2580,80 @@
       "click",
       closeBookingModal
     );
+
+    document.querySelector(
+  "#conflict-back"
+).addEventListener(
+  "click",
+  () => {
+
+    pendingBooking = null;
+
+    document.querySelector(
+      "#conflict-box"
+    ).hidden = true;
+
+  }
+);
+
+
+document.querySelector(
+  "#conflict-continue"
+).addEventListener(
+  "click",
+  async () => {
+
+    if (!pendingBooking) {
+      return;
+    }
+
+
+    const button =
+      document.querySelector(
+        "#conflict-continue"
+      );
+
+
+    const errorElement =
+      document.querySelector(
+        "#form-error"
+      );
+
+
+    button.disabled = true;
+
+    button.textContent =
+      "Booker...";
+
+
+    try {
+
+      await performBooking(
+        pendingBooking
+      );
+
+
+    } catch (error) {
+
+      console.error(error);
+
+
+      errorElement.textContent =
+        error.message
+        || "Bookingen kunne ikke gennemføres.";
+
+
+    } finally {
+
+      button.disabled = false;
+
+      button.textContent =
+        "Book alligevel";
+
+    }
+
+  }
+);
 
 
     document.querySelector(

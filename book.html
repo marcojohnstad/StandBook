@@ -2581,6 +2581,37 @@ document.querySelector(
       submitBooking
     );
 
+    setInterval(
+  async () => {
+
+    if (!currentEvent) {
+      return;
+    }
+
+    try {
+
+      bookings =
+        await window
+          .StandBookBooking
+          .getPublicBookings(
+            currentEvent.id
+          );
+
+      renderSchedule();
+
+    } catch (error) {
+
+      console.warn(
+        "Kunne ikke opdatere bookinger:",
+        error
+      );
+
+    }
+
+  },
+  15000
+);
+
 
     startBookingPage();
 

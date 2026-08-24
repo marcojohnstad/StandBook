@@ -12,207 +12,914 @@
   <title>StandBook</title>
 
   <style>
+    :root {
+      --bg: #f5f3ee;
+      --surface: #ffffff;
+      --surface-soft: #f1f2ee;
+
+      --text: #1f2521;
+      --muted: #6f776f;
+
+      --green: #244b39;
+      --green-dark: #19382a;
+      --green-soft: #e7efe9;
+
+      --border: #dddeda;
+
+      --warning-bg: #fff5dc;
+      --warning-text: #8a6100;
+
+      --full-bg: #eceeeb;
+      --full-text: #686f69;
+
+      --shadow:
+        0 18px 50px rgba(39, 49, 41, 0.08);
+
+      --radius-xl: 26px;
+      --radius-lg: 19px;
+      --radius-md: 13px;
+    }
+
+
+    * {
+      box-sizing: border-box;
+    }
+
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+
     body {
+      margin: 0;
+
       font-family:
+        Inter,
+        ui-sans-serif,
         system-ui,
         -apple-system,
         BlinkMacSystemFont,
         "Segoe UI",
         sans-serif;
 
-      max-width: 720px;
-      margin: 0 auto;
-      padding: 32px 18px 60px;
-      background: #f6f7f4;
-      color: #20231f;
+      color: var(--text);
+
+      background:
+        radial-gradient(
+          circle at top left,
+          rgba(36, 75, 57, 0.09),
+          transparent 34rem
+        ),
+        var(--bg);
     }
 
-    h1 {
-      margin-bottom: 8px;
-    }
 
     button {
       font: inherit;
-      cursor: pointer;
     }
 
-    .event-description {
-      color: #60655f;
-      line-height: 1.6;
+
+    a {
+      color: inherit;
     }
+
+
+    .page-shell {
+      width:
+        min(
+          760px,
+          calc(100% - 28px)
+        );
+
+      margin: 0 auto;
+
+      padding:
+        46px 0
+        72px;
+    }
+
+
+    /* =====================================
+       BRAND
+    ===================================== */
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+
+      margin-bottom: 34px;
+
+      color: var(--green);
+
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+
+    .brand-mark {
+      display: grid;
+      place-items: center;
+
+      width: 34px;
+      height: 34px;
+
+      border-radius: 10px;
+
+      color: white;
+      background: var(--green);
+
+      font-size: 0.95rem;
+    }
+
+
+    /* =====================================
+       HERO
+    ===================================== */
+
+    .hero {
+      margin-bottom: 30px;
+    }
+
+
+    .hero-label {
+      margin: 0 0 10px;
+
+      color: var(--green);
+
+      font-size: 0.78rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+
+      text-transform: uppercase;
+    }
+
+
+    .hero h1 {
+      margin: 0;
+
+      max-width: 700px;
+
+      font-size:
+        clamp(
+          2.25rem,
+          8vw,
+          4rem
+        );
+
+      line-height: 1.01;
+      letter-spacing: -0.055em;
+    }
+
+
+    .hero-description {
+      max-width: 620px;
+
+      margin: 20px 0 0;
+
+      color: var(--muted);
+
+      font-size: 1.03rem;
+      line-height: 1.7;
+    }
+
+
+    /* =====================================
+       MAIN BOOKING CARD
+    ===================================== */
+
+    .booking-shell {
+      padding: 22px;
+
+      border:
+        1px solid
+        rgba(221, 222, 218, 0.9);
+
+      border-radius:
+        var(--radius-xl);
+
+      background:
+        rgba(
+          255,
+          255,
+          255,
+          0.86
+        );
+
+      box-shadow:
+        var(--shadow);
+
+      backdrop-filter:
+        blur(10px);
+    }
+
+
+    .booking-heading {
+      margin-bottom: 20px;
+    }
+
+
+    .booking-heading p {
+      margin: 0 0 5px;
+
+      color: var(--muted);
+
+      font-size: 0.83rem;
+      font-weight: 700;
+    }
+
+
+    .booking-heading h2 {
+      margin: 0;
+
+      font-size: 1.45rem;
+      letter-spacing: -0.025em;
+    }
+
+
+    /* =====================================
+       DAY TABS
+    ===================================== */
 
     .day-tabs {
-      display: flex;
+      display: grid;
+
+      grid-template-columns:
+        repeat(
+          auto-fit,
+          minmax(140px, 1fr)
+        );
+
       gap: 8px;
-      overflow-x: auto;
-      margin: 28px 0 20px;
+
+      margin-bottom: 24px;
+
+      padding: 6px;
+
+      border-radius: 16px;
+
+      background:
+        var(--surface-soft);
     }
+
 
     .day-tab {
-      border: 1px solid #d8ddd7;
+      border: 0;
+
+      padding: 12px 14px;
+
       border-radius: 12px;
-      padding: 10px 14px;
-      background: white;
-      white-space: nowrap;
+
+      color: var(--muted);
+      background: transparent;
+
+      cursor: pointer;
+
+      text-align: left;
+
+      transition:
+        background 140ms ease,
+        color 140ms ease,
+        box-shadow 140ms ease;
     }
+
+
+    .day-tab:hover {
+      color: var(--text);
+    }
+
 
     .day-tab.active {
-      background: #254d3b;
-      color: white;
-      border-color: #254d3b;
+      color: var(--text);
+      background: white;
+
+      box-shadow:
+        0 5px 17px
+        rgba(39, 49, 41, 0.08);
     }
+
+
+    .day-tab span,
+    .day-tab strong {
+      display: block;
+    }
+
+
+    .day-tab span {
+      margin-bottom: 2px;
+
+      font-size: 0.76rem;
+      color: inherit;
+    }
+
+
+    .day-tab strong {
+      font-size: 0.95rem;
+    }
+
+
+    /* =====================================
+       TIME GROUP
+    ===================================== */
 
     .time-group {
-      margin-bottom: 26px;
+      margin-top: 24px;
     }
+
+
+    .time-group:first-child {
+      margin-top: 0;
+    }
+
 
     .time-heading {
-      margin: 0 0 10px;
-      font-size: 1.15rem;
+      margin:
+        0 0 10px;
+
+      font-size: 1.06rem;
+      letter-spacing: -0.015em;
     }
+
+
+    .time-subheading {
+      margin:
+        -4px 0
+        12px;
+
+      color: var(--muted);
+
+      font-size: 0.82rem;
+    }
+
+
+    /* =====================================
+       STAND CARD
+    ===================================== */
 
     .stand-card {
-      border: 1px solid #dfe3de;
-      border-radius: 16px;
       padding: 18px;
-      margin-bottom: 10px;
-      background: white;
+
+      margin-bottom: 11px;
+
+      border:
+        1px solid
+        var(--border);
+
+      border-radius:
+        var(--radius-lg);
+
+      background:
+        var(--surface);
+
+      transition:
+        transform 140ms ease,
+        box-shadow 140ms ease,
+        border-color 140ms ease;
     }
 
-    .stand-card h3 {
-      margin: 0 0 6px;
+
+    .stand-card:not(.stand-card-full):hover {
+      transform:
+        translateY(-1px);
+
+      border-color:
+        rgba(36, 75, 57, 0.28);
+
+      box-shadow:
+        0 12px 26px
+        rgba(39, 49, 41, 0.055);
     }
 
-    .address {
-      margin: 0 0 6px;
-      color: #666b65;
+
+    .stand-top {
+      display: flex;
+
+      align-items:
+        flex-start;
+
+      justify-content:
+        space-between;
+
+      gap: 14px;
+
+      margin-bottom: 14px;
     }
+
+
+    .stand-title {
+      margin: 0 0 4px;
+
+      font-size: 1.07rem;
+      letter-spacing: -0.01em;
+    }
+
+
+    .stand-address {
+      margin: 0;
+
+      color: var(--muted);
+
+      font-size: 0.89rem;
+      line-height: 1.45;
+    }
+
 
     .map-link {
-      display: inline-block;
-      margin-bottom: 16px;
-      color: #254d3b;
-      font-weight: 600;
+      display:
+        inline-flex;
+
+      align-items:
+        center;
+
+      gap: 5px;
+
+      margin-top: 7px;
+
+      color: var(--green);
+
+      font-size: 0.84rem;
+      font-weight: 750;
+
+      text-decoration: none;
     }
+
+
+    .map-link:hover {
+      text-decoration: underline;
+    }
+
+
+    /* =====================================
+       STATUS
+    ===================================== */
+
+    .status {
+      flex:
+        0 0 auto;
+
+      display:
+        inline-flex;
+
+      align-items:
+        center;
+
+      min-height: 27px;
+
+      padding:
+        5px 9px;
+
+      border-radius:
+        999px;
+
+      font-size:
+        0.72rem;
+
+      font-weight:
+        800;
+
+      white-space:
+        nowrap;
+    }
+
+
+    .status.open {
+      color:
+        #17633f;
+
+      background:
+        var(--green-soft);
+    }
+
+
+    .status.partial {
+      color:
+        var(--warning-text);
+
+      background:
+        var(--warning-bg);
+    }
+
+
+    .status.full,
+    .status.closed {
+      color:
+        var(--full-text);
+
+      background:
+        var(--full-bg);
+    }
+
+
+    /* =====================================
+       PEOPLE SLOTS
+    ===================================== */
 
     .people {
       display: grid;
+
       gap: 7px;
-      margin-top: 10px;
+
+      margin-top: 13px;
     }
+
 
     .person {
-      padding: 10px 12px;
-      border-radius: 10px;
-      background: #f1f3f0;
+      display: flex;
+
+      align-items:
+        center;
+
+      min-height: 43px;
+
+      padding:
+        10px 12px;
+
+      border-radius:
+        var(--radius-md);
+
+      background:
+        var(--surface-soft);
+
+      font-size:
+        0.93rem;
+
+      font-weight:
+        650;
     }
+
+
+    .person::before {
+      content: "✓";
+
+      display:
+        grid;
+
+      place-items:
+        center;
+
+      width: 20px;
+      height: 20px;
+
+      margin-right: 9px;
+
+      border-radius:
+        50%;
+
+      color: white;
+
+      background:
+        var(--green);
+
+      font-size:
+        0.68rem;
+    }
+
 
     .person.empty {
-      border: 1px dashed #c8cec7;
-      background: transparent;
-      color: #747a73;
+      border:
+        1px dashed
+        #cbd0ca;
+
+      color:
+        #7f867f;
+
+      background:
+        transparent;
+
+      font-weight:
+        550;
     }
 
-    .status {
-      display: inline-block;
-      margin-top: 14px;
-      padding: 5px 9px;
-      border-radius: 999px;
-      font-size: 0.8rem;
-      font-weight: 700;
+
+    .person.empty::before {
+      content: "";
+
+      width: 18px;
+      height: 18px;
+
+      border:
+        1px dashed
+        #b8beb7;
+
+      background:
+        transparent;
     }
 
-    .status.open {
-      color: #17633e;
-      background: #e6f4eb;
-    }
 
-    .status.partial {
-      color: #7a5a00;
-      background: #fff3cd;
-    }
-
-    .status.full {
-      color: #656965;
-      background: #ededed;
-    }
-
-    .status.closed {
-      color: #656965;
-      background: #ededed;
-    }
+    /* =====================================
+       CTA
+    ===================================== */
 
     .book-button {
+      display: inline-flex;
+
+      align-items:
+        center;
+
+      justify-content:
+        center;
+
       width: 100%;
+
+      min-height: 47px;
+
       margin-top: 14px;
-      padding: 11px 14px;
-      border: 0;
-      border-radius: 11px;
-      background: #254d3b;
-      color: white;
-      font-weight: 700;
+
+      padding:
+        11px 18px;
+
+      border:
+        1px solid
+        var(--green);
+
+      border-radius:
+        12px;
+
+      color:
+        white;
+
+      background:
+        var(--green);
+
+      font-weight:
+        800;
+
+      cursor:
+        pointer;
+
+      transition:
+        background 140ms ease,
+        transform 140ms ease;
     }
+
+
+    .book-button:hover {
+      background:
+        var(--green-dark);
+
+      transform:
+        translateY(-1px);
+    }
+
+
+    .book-button:active {
+      transform:
+        translateY(0);
+    }
+
 
     .book-button:disabled {
-      cursor: not-allowed;
-      background: #b8bdb8;
+      cursor:
+        not-allowed;
+
+      border-color:
+        #b8bdb8;
+
+      background:
+        #b8bdb8;
+
+      transform:
+        none;
     }
 
-    #loading,
-    #error-message {
-      padding: 30px 0;
+
+    .stand-card-full {
+      background:
+        #f7f7f5;
     }
 
-    #error-message {
-      color: #a21d18;
+
+    /* =====================================
+       LOADING / ERROR
+    ===================================== */
+
+    .state-message {
+      padding:
+        28px 2px;
+
+      color:
+        var(--muted);
     }
+
+
+    .error {
+      color:
+        #a02923;
+    }
+
+
+    /* =====================================
+       FOOTER
+    ===================================== */
+
+    .footer-note {
+      margin:
+        26px 0 0;
+
+      color:
+        var(--muted);
+
+      font-size:
+        0.78rem;
+
+      line-height:
+        1.55;
+
+      text-align:
+        center;
+    }
+
+
+    /* =====================================
+       MOBILE
+    ===================================== */
+
+    @media (
+      max-width: 600px
+    ) {
+
+      .page-shell {
+        width:
+          min(
+            100% - 18px,
+            760px
+          );
+
+        padding:
+          28px 0
+          46px;
+      }
+
+
+      .brand {
+        margin-left: 4px;
+        margin-bottom: 26px;
+      }
+
+
+      .hero {
+        padding:
+          0 4px;
+
+        margin-bottom:
+          24px;
+      }
+
+
+      .hero h1 {
+        font-size:
+          clamp(
+            2.1rem,
+            12vw,
+            3.2rem
+          );
+      }
+
+
+      .booking-shell {
+        padding:
+          15px;
+
+        border-radius:
+          21px;
+      }
+
+
+      .stand-card {
+        padding:
+          16px;
+      }
+
+
+      .stand-top {
+        gap:
+          10px;
+      }
+
+
+      .status {
+        font-size:
+          0.68rem;
+      }
+
+    }
+
   </style>
 </head>
 
 
 <body>
 
-  <p id="loading">
-    Henter arrangement...
-  </p>
-
-  <p
-    id="error-message"
-    hidden
-  ></p>
+  <div class="page-shell">
 
 
-  <main
-    id="page"
-    hidden
-  >
+    <!-- BRAND -->
 
-    <header>
+    <div class="brand">
 
-      <p>
-        <strong>StandBook</strong>
+      <div class="brand-mark">
+        S
+      </div>
+
+      <span>
+        StandBook
+      </span>
+
+    </div>
+
+
+
+    <!-- LOADING -->
+
+    <p
+      id="loading"
+      class="state-message"
+    >
+      Henter arrangement...
+    </p>
+
+
+
+    <!-- ERROR -->
+
+    <p
+      id="error-message"
+      class="state-message error"
+      hidden
+    ></p>
+
+
+
+    <!-- PAGE -->
+
+    <main
+      id="page"
+      hidden
+    >
+
+
+      <!-- HERO -->
+
+      <header class="hero">
+
+        <p class="hero-label">
+          Standbooking
+        </p>
+
+        <h1 id="event-title"></h1>
+
+        <p
+          id="event-description"
+          class="hero-description"
+        ></p>
+
+      </header>
+
+
+
+      <!-- BOOKING -->
+
+      <section class="booking-shell">
+
+        <div class="booking-heading">
+
+          <p>
+            Vagtplan
+          </p>
+
+          <h2>
+            Vælg et tidspunkt
+          </h2>
+
+        </div>
+
+
+        <nav
+          id="day-tabs"
+          class="day-tabs"
+          aria-label="Vælg dag"
+        ></nav>
+
+
+        <section
+          id="schedule"
+        ></section>
+
+      </section>
+
+
+      <p class="footer-note">
+        Dit navn bliver synligt for andre,
+        der har adgang til bookinglinket.
+        Kontakt arrangøren, hvis din booking
+        skal ændres eller slettes.
       </p>
 
-      <h1 id="event-title"></h1>
+    </main>
 
-      <p
-        id="event-description"
-        class="event-description"
-      ></p>
+  </div>
 
-    </header>
-
-
-    <nav
-      id="day-tabs"
-      class="day-tabs"
-      aria-label="Vælg dag"
-    ></nav>
-
-
-    <section id="schedule"></section>
-
-  </main>
 
 
   <script
@@ -221,24 +928,38 @@
 
   <script src="js/config.js"></script>
   <script src="js/supabase.js"></script>
-  <script src="js/booking.js?v=1"></script>
+  <script src="js/booking.js?v=2"></script>
+
 
 
   <script>
 
     let currentEvent = null;
+
     let stands = [];
+
     let eventDays = [];
+
     let shifts = [];
+
     let bookings = [];
 
     let selectedDate = null;
 
 
-    function escapeHtml(value) {
+
+    /* =====================================
+       HELPERS
+    ===================================== */
+
+    function escapeHtml(
+      value
+    ) {
 
       const div =
-        document.createElement("div");
+        document.createElement(
+          "div"
+        );
 
       div.textContent =
         value ?? "";
@@ -247,7 +968,10 @@
     }
 
 
-    function formatTime(value) {
+
+    function formatTime(
+      value
+    ) {
 
       if (!value) {
         return "";
@@ -255,26 +979,60 @@
 
       return value
         .slice(0, 5)
-        .replace(":", ".");
+        .replace(
+          ":",
+          "."
+        );
     }
 
 
-    function formatDate(value) {
+
+    function formatDateParts(
+      value
+    ) {
 
       const date =
         new Date(
-          value + "T12:00:00"
+          value
+          + "T12:00:00"
         );
 
-      return new Intl.DateTimeFormat(
-        "da-DK",
-        {
-          weekday: "long",
-          day: "numeric",
-          month: "long"
-        }
-      ).format(date);
+
+      const weekday =
+        new Intl.DateTimeFormat(
+          "da-DK",
+          {
+            weekday:
+              "long"
+          }
+        )
+        .format(
+          date
+        );
+
+
+      const dateText =
+        new Intl.DateTimeFormat(
+          "da-DK",
+          {
+            day:
+              "numeric",
+
+            month:
+              "short"
+          }
+        )
+        .format(
+          date
+        );
+
+
+      return {
+        weekday,
+        dateText
+      };
     }
+
 
 
     function getSlug() {
@@ -284,84 +1042,111 @@
           window.location.search
         );
 
-      return params.get("event");
+      return params.get(
+        "event"
+      );
     }
 
 
-    function getStand(standId) {
+
+    function getStand(
+      standId
+    ) {
 
       return stands.find(
-        stand => stand.id === standId
+        stand =>
+          stand.id ===
+          standId
       );
     }
 
 
-    function getDay(dayId) {
 
-      return eventDays.find(
-        day => day.id === dayId
-      );
-    }
-
-
-    function getShiftBookings(shiftId) {
+    function getShiftBookings(
+      shiftId
+    ) {
 
       return bookings.filter(
         booking =>
-          booking.shift_id === shiftId
+          booking.shift_id ===
+          shiftId
       );
     }
 
 
-    function getAvailability(shift) {
+
+    function getAvailability(
+      shift
+    ) {
 
       const shiftBookings =
         getShiftBookings(
           shift.id
         );
 
+
       const remaining =
         shift.capacity
         - shiftBookings.length;
 
 
-      if (shift.is_closed) {
+      if (
+        shift.is_closed
+      ) {
 
         return {
           remaining: 0,
           label: "Lukket",
           className: "closed"
         };
+
       }
 
 
-      if (remaining <= 0) {
+      if (
+        remaining <= 0
+      ) {
 
         return {
           remaining: 0,
-          label: "Fuldt booket",
-          className: "full"
+          label:
+            "Fuldt booket",
+          className:
+            "full"
         };
+
       }
 
 
-      if (remaining === 1) {
+      if (
+        remaining === 1
+      ) {
 
         return {
           remaining: 1,
-          label: "1 ledig plads",
-          className: "partial"
+          label:
+            "1 ledig",
+          className:
+            "partial"
         };
+
       }
 
 
       return {
         remaining: 2,
-        label: "2 ledige pladser",
-        className: "open"
+        label:
+          "2 ledige",
+        className:
+          "open"
       };
     }
 
+
+
+    /* =====================================
+       DAY TABS
+    ===================================== */
 
     function renderDayTabs() {
 
@@ -375,7 +1160,8 @@
         [
           ...new Set(
             eventDays.map(
-              day => day.event_date
+              day =>
+                day.event_date
             )
           )
         ];
@@ -385,28 +1171,56 @@
         !selectedDate &&
         dates.length > 0
       ) {
-        selectedDate = dates[0];
+
+        selectedDate =
+          dates[0];
+
       }
 
 
       container.innerHTML =
         dates
-          .map(date => `
-            <button
-              type="button"
-              class="day-tab
-                ${
-                  date === selectedDate
-                    ? " active"
-                    : ""
-                }"
-              data-date="${date}"
-            >
-              ${escapeHtml(
-                formatDate(date)
-              )}
-            </button>
-          `)
+          .map(
+            date => {
+
+              const parts =
+                formatDateParts(
+                  date
+                );
+
+
+              return `
+                <button
+                  type="button"
+                  class="
+                    day-tab
+                    ${
+                      date ===
+                      selectedDate
+                        ? "active"
+                        : ""
+                    }
+                  "
+                  data-date="${date}"
+                >
+
+                  <span>
+                    ${escapeHtml(
+                      parts.weekday
+                    )}
+                  </span>
+
+                  <strong>
+                    ${escapeHtml(
+                      parts.dateText
+                    )}
+                  </strong>
+
+                </button>
+              `;
+
+            }
+          )
           .join("");
 
 
@@ -414,26 +1228,37 @@
         .querySelectorAll(
           ".day-tab"
         )
-        .forEach(button => {
+        .forEach(
+          button => {
 
-          button.addEventListener(
-            "click",
-            () => {
+            button
+              .addEventListener(
+                "click",
+                () => {
 
-              selectedDate =
-                button.dataset.date;
+                  selectedDate =
+                    button.dataset.date;
 
-              renderDayTabs();
-              renderSchedule();
+                  renderDayTabs();
 
-            }
-          );
+                  renderSchedule();
 
-        });
+                }
+              );
+
+          }
+        );
     }
 
 
-    function renderPersonSlots(shift) {
+
+    /* =====================================
+       PERSON SLOTS
+    ===================================== */
+
+    function renderPersonSlots(
+      shift
+    ) {
 
       const shiftBookings =
         getShiftBookings(
@@ -458,9 +1283,11 @@
 
           people.push(`
             <div class="person">
+
               ${escapeHtml(
                 booking.name
               )}
+
             </div>
           `);
 
@@ -468,7 +1295,9 @@
 
           people.push(`
             <div class="person empty">
+
               Ledig plads
+
             </div>
           `);
 
@@ -480,6 +1309,11 @@
       return people.join("");
     }
 
+
+
+    /* =====================================
+       SCHEDULE
+    ===================================== */
 
     function renderSchedule() {
 
@@ -499,7 +1333,8 @@
 
       const selectedDayIds =
         selectedDays.map(
-          day => day.id
+          day =>
+            day.id
         );
 
 
@@ -512,10 +1347,16 @@
         );
 
 
-      if (dayShifts.length === 0) {
+      if (
+        dayShifts.length === 0
+      ) {
 
         container.innerHTML =
-          "<p>Der er ingen vagter denne dag.</p>";
+          `
+            <p class="state-message">
+              Der er ingen vagter denne dag.
+            </p>
+          `;
 
         return;
       }
@@ -534,161 +1375,203 @@
 
       container.innerHTML =
         startTimes
-          .map(startTime => {
+          .map(
+            startTime => {
 
-            const timeShifts =
-              dayShifts.filter(
-                shift =>
-                  shift.start_time ===
-                  startTime
-              );
-
-
-            const firstShift =
-              timeShifts[0];
+              const timeShifts =
+                dayShifts.filter(
+                  shift =>
+                    shift.start_time ===
+                    startTime
+                );
 
 
-            const timeHeading =
-              formatTime(
-                firstShift.start_time
-              )
-              + "–"
-              + formatTime(
-                firstShift.end_time
-              );
+              const firstShift =
+                timeShifts[0];
 
 
-            const standHtml =
-              timeShifts
-                .map(shift => {
-
-                  const stand =
-                    getStand(
-                      shift.stand_id
-                    );
-
-
-                  if (!stand) {
-                    return "";
-                  }
+              const timeHeading =
+                formatTime(
+                  firstShift.start_time
+                )
+                + "–"
+                + formatTime(
+                  firstShift.end_time
+                );
 
 
-                  const availability =
-                    getAvailability(
-                      shift
-                    );
+              const standHtml =
+                timeShifts
+                  .map(
+                    shift => {
+
+                      const stand =
+                        getStand(
+                          shift.stand_id
+                        );
 
 
-                  return `
-                    <article class="stand-card">
-
-                      <h3>
-                        ${escapeHtml(
-                          stand.name
-                        )}
-                      </h3>
-
-                      <p class="address">
-                        ${escapeHtml(
-                          stand.address
-                        )}
-                      </p>
-
-                      <a
-                        class="map-link"
-                        href="${window
-                          .StandBookBooking
-                          .createMapUrl(
-                            stand.address
-                          )}"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        Se på kort ↗
-                      </a>
-
-
-                      <div class="people">
-                        ${renderPersonSlots(
-                          shift
-                        )}
-                      </div>
-
-
-                      <span
-                        class="status
-                          ${availability.className}"
-                      >
-                        ${availability.label}
-                      </span>
-
-
-                      ${
-                        availability.remaining > 0
-                          ? `
-                            <button
-                              type="button"
-                              class="book-button"
-                              data-shift-id="${shift.id}"
-                            >
-                              ${
-                                availability.remaining === 1
-                                  ? "Book ledig plads"
-                                  : "Vælg tidspunkt"
-                              }
-                            </button>
-                          `
-                          : ""
+                      if (!stand) {
+                        return "";
                       }
 
-                    </article>
-                  `;
 
-                })
-                .join("");
+                      const availability =
+                        getAvailability(
+                          shift
+                        );
 
 
-            return `
-              <section class="time-group">
+                      const fullClass =
+                        availability.remaining === 0
+                          ? " stand-card-full"
+                          : "";
 
-                <h2 class="time-heading">
-                  ${timeHeading}
-                </h2>
 
-                ${standHtml}
+                      return `
+                        <article
+                          class="
+                            stand-card
+                            ${fullClass}
+                          "
+                        >
 
-              </section>
-            `;
+                          <div class="stand-top">
 
-          })
+                            <div>
+
+                              <h3
+                                class="stand-title"
+                              >
+                                ${escapeHtml(
+                                  stand.name
+                                )}
+                              </h3>
+
+
+                              <p
+                                class="stand-address"
+                              >
+                                ${escapeHtml(
+                                  stand.address
+                                )}
+                              </p>
+
+
+                              <a
+                                class="map-link"
+                                href="${window
+                                  .StandBookBooking
+                                  .createMapUrl(
+                                    stand.address
+                                  )}"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                              >
+                                Se på kort ↗
+                              </a>
+
+                            </div>
+
+
+                            <span
+                              class="
+                                status
+                                ${availability.className}
+                              "
+                            >
+                              ${availability.label}
+                            </span>
+
+                          </div>
+
+
+                          <div class="people">
+
+                            ${renderPersonSlots(
+                              shift
+                            )}
+
+                          </div>
+
+
+                          ${
+                            availability.remaining > 0
+
+                              ? `
+                                <button
+                                  type="button"
+                                  class="book-button"
+                                  data-shift-id="${shift.id}"
+                                >
+                                  ${
+                                    availability.remaining === 1
+                                      ? "Book ledig plads"
+                                      : "Vælg tidspunkt"
+                                  }
+                                </button>
+                              `
+
+                              : ""
+                          }
+
+                        </article>
+                      `;
+
+                    }
+                  )
+                  .join("");
+
+
+              return `
+                <section
+                  class="time-group"
+                >
+
+                  <h2
+                    class="time-heading"
+                  >
+                    ${timeHeading}
+                  </h2>
+
+                  ${standHtml}
+
+                </section>
+              `;
+
+            }
+          )
           .join("");
 
-
-      /*
-        Book-knapperne får deres funktion
-        i næste trin.
-      */
 
       document
         .querySelectorAll(
           ".book-button"
         )
-        .forEach(button => {
+        .forEach(
+          button => {
 
-          button.addEventListener(
-            "click",
-            () => {
+            button
+              .addEventListener(
+                "click",
+                () => {
 
-              alert(
-                "Bookingformularen kommer i næste trin."
+                  alert(
+                    "Bookingformularen kommer i næste trin."
+                  );
+
+                }
               );
 
-            }
-          );
-
-        });
+          }
+        );
     }
 
+
+
+    /* =====================================
+       START
+    ===================================== */
 
     async function startBookingPage() {
 
@@ -700,7 +1583,8 @@
 
         document.querySelector(
           "#loading"
-        ).hidden = true;
+        ).hidden =
+          true;
 
 
         const error =
@@ -708,10 +1592,14 @@
             "#error-message"
           );
 
+
         error.textContent =
           "Bookinglinket er ugyldigt.";
 
-        error.hidden = false;
+
+        error.hidden =
+          false;
+
 
         return;
       }
@@ -777,12 +1665,14 @@
 
         document.querySelector(
           "#loading"
-        ).hidden = true;
+        ).hidden =
+          true;
 
 
         document.querySelector(
           "#page"
-        ).hidden = false;
+        ).hidden =
+          false;
 
 
         renderDayTabs();
@@ -790,14 +1680,19 @@
         renderSchedule();
 
 
-      } catch (error) {
+      } catch (
+        error
+      ) {
 
-        console.error(error);
+        console.error(
+          error
+        );
 
 
         document.querySelector(
           "#loading"
-        ).hidden = true;
+        ).hidden =
+          true;
 
 
         const message =
@@ -811,10 +1706,12 @@
           + error.message;
 
 
-        message.hidden = false;
+        message.hidden =
+          false;
 
       }
     }
+
 
 
     startBookingPage();

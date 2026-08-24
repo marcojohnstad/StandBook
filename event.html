@@ -27,18 +27,15 @@
       padding: 20px;
     }
 
-
     button,
     input {
       font: inherit;
     }
 
-
     button {
       cursor: pointer;
       padding: 10px 16px;
     }
-
 
     input {
       box-sizing: border-box;
@@ -47,12 +44,10 @@
       margin-top: 6px;
     }
 
-
     label {
       display: block;
       margin-bottom: 18px;
     }
-
 
     .card {
       border: 1px solid #ddd;
@@ -61,11 +56,9 @@
       margin-bottom: 16px;
     }
 
-
     .stand-card {
       margin-top: 20px;
     }
-
 
     .day-card {
       background: #f7f7f7;
@@ -73,7 +66,6 @@
       padding: 14px;
       margin-top: 10px;
     }
-
 
     .form-panel {
       border: 1px solid #ddd;
@@ -83,18 +75,15 @@
       margin-bottom: 30px;
     }
 
-
     .map-link {
       display: inline-block;
       margin-bottom: 12px;
     }
 
-
     .back-link {
       display: inline-block;
       margin-bottom: 30px;
     }
-
 
     #message {
       min-height: 24px;
@@ -269,14 +258,18 @@
         return "";
       }
 
-      return value.slice(0, 5).replace(":", ".");
+      return value
+        .slice(0, 5)
+        .replace(":", ".");
     }
 
 
     function formatDate(value) {
 
       const date =
-        new Date(value + "T12:00:00");
+        new Date(
+          value + "T12:00:00"
+        );
 
       return new Intl.DateTimeFormat(
         "da-DK",
@@ -298,9 +291,14 @@
         );
 
       const id =
-        Number(params.get("id"));
+        Number(
+          params.get("id")
+        );
 
-      if (!Number.isInteger(id) || id < 1) {
+      if (
+        !Number.isInteger(id) ||
+        id < 1
+      ) {
         return null;
       }
 
@@ -324,13 +322,17 @@
         const stands =
           await window
             .StandBookAdmin
-            .getStands(currentEvent.id);
+            .getStands(
+              currentEvent.id
+            );
 
 
         const days =
           await window
             .StandBookAdmin
-            .getEventDays(currentEvent.id);
+            .getEventDays(
+              currentEvent.id
+            );
 
 
         if (stands.length === 0) {
@@ -369,9 +371,13 @@
 
                           <br>
 
-                          ${formatTime(day.opens_at)}
+                          ${formatTime(
+                            day.opens_at
+                          )}
                           –
-                          ${formatTime(day.closes_at)}
+                          ${formatTime(
+                            day.closes_at
+                          )}
 
                         </div>
                       `)
@@ -385,14 +391,20 @@
 
 
               return `
-                <article class="card stand-card">
+                <article
+                  class="card stand-card"
+                >
 
                   <h3>
-                    ${escapeHtml(stand.name)}
+                    ${escapeHtml(
+                      stand.name
+                    )}
                   </h3>
 
                   <p>
-                    ${escapeHtml(stand.address)}
+                    ${escapeHtml(
+                      stand.address
+                    )}
                   </p>
 
                   <a
@@ -657,7 +669,9 @@
         currentEvent =
           await window
             .StandBookAdmin
-            .getEvent(eventId);
+            .getEvent(
+              eventId
+            );
 
 
         document.querySelector(
@@ -712,7 +726,9 @@
 
 
     document
-      .querySelector("#show-stand-form")
+      .querySelector(
+        "#show-stand-form"
+      )
       .addEventListener(
         "click",
         () => {
@@ -734,7 +750,9 @@
 
 
     document
-      .querySelector("#cancel-stand")
+      .querySelector(
+        "#cancel-stand"
+      )
       .addEventListener(
         "click",
         () => {
@@ -756,7 +774,9 @@
 
 
     document
-      .querySelector("#stand-form")
+      .querySelector(
+        "#stand-form"
+      )
       .addEventListener(
         "submit",
         async event => {

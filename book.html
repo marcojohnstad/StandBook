@@ -2085,36 +2085,44 @@
 
 
   const bookBoth =
+    document.querySelectorasync function submitBooking(event) {
+
+  event.preventDefault();
+
+  if (!selectedShift) {
+    return;
+  }
+
+  const firstName =
+    document.querySelector(
+      "#first-name"
+    ).value.trim();
+
+  const bookBoth =
     document.querySelector(
       "#book-both"
     ).checked;
-
 
   const secondName =
     document.querySelector(
       "#second-name"
     ).value.trim();
 
-
   const errorElement =
     document.querySelector(
       "#form-error"
     );
-
 
   const submitButton =
     document.querySelector(
       "#submit-booking"
     );
 
-
   errorElement.textContent = "";
-
 
   document.querySelector(
     "#conflict-box"
   ).hidden = true;
-
 
   if (!firstName) {
 
@@ -2123,7 +2131,6 @@
 
     return;
   }
-
 
   if (
     bookBoth &&
@@ -2136,12 +2143,10 @@
     return;
   }
 
-
   submitButton.disabled = true;
 
   submitButton.textContent =
     "Kontrollerer...";
-
 
   try {
 
@@ -2152,7 +2157,6 @@
           selectedShift.id,
           firstName
         );
-
 
     if (
       conflict &&
@@ -2175,12 +2179,10 @@
           bookBoth
       };
 
-
       const conflictText =
         document.querySelector(
           "#conflict-text"
         );
-
 
       conflictText.textContent =
         firstName
@@ -2196,21 +2198,12 @@
           )
         + ".";
 
-
       document.querySelector(
         "#conflict-box"
       ).hidden = false;
 
-
-      submitButton.disabled = false;
-
-      submitButton.textContent =
-        "Bekræft booking";
-
-
       return;
     }
-
 
     await performBooking({
       shiftId:
@@ -2228,16 +2221,13 @@
         bookBoth
     });
 
-
   } catch (error) {
 
     console.error(error);
 
-
     errorElement.textContent =
       error.message
       || "Bookingen kunne ikke gennemføres.";
-
 
   } finally {
 
@@ -2248,7 +2238,9 @@
 
   }
 }
-      async function performBooking({
+
+
+async function performBooking({
   shiftId,
   firstName,
   secondName,
@@ -2273,148 +2265,14 @@
 
     });
 
-
   pendingBooking = null;
-
 
   closeBookingModal();
 
-
   await refreshBookings();
-
 
   showSuccessToast();
 }
-    
-      event.preventDefault();
-
-
-      if (!selectedShift) {
-        return;
-      }
-
-
-      const firstName =
-        document.querySelector(
-          "#first-name"
-        ).value.trim();
-
-
-      const bookBoth =
-        document.querySelector(
-          "#book-both"
-        ).checked;
-
-
-      const secondName =
-        document.querySelector(
-          "#second-name"
-        ).value.trim();
-
-
-      const errorElement =
-        document.querySelector(
-          "#form-error"
-        );
-
-
-      const submitButton =
-        document.querySelector(
-          "#submit-booking"
-        );
-
-
-      errorElement.textContent = "";
-
-
-      if (!firstName) {
-
-        errorElement.textContent =
-          "Skriv dit navn.";
-
-        return;
-      }
-
-
-      if (
-        bookBoth &&
-        !secondName
-      ) {
-
-        errorElement.textContent =
-          "Skriv din makkers navn.";
-
-        return;
-      }
-
-
-      submitButton.disabled = true;
-
-      submitButton.textContent =
-        "Booker...";
-
-
-      try {
-
-        /*
-          I næste trin lægger vi
-          konfliktadvarslen ind her.
-
-          Selve bookingen virker allerede nu.
-        */
-
-        await window
-          .StandBookBooking
-          .bookShift({
-
-            shiftId:
-              selectedShift.id,
-
-            firstName:
-              firstName,
-
-            secondName:
-              bookBoth
-                ? secondName
-                : null,
-
-            bookBoth:
-              bookBoth
-
-          });
-
-
-        closeBookingModal();
-
-
-        await refreshBookings();
-
-
-        showSuccessToast();
-
-
-      } catch (error) {
-
-        console.error(error);
-
-
-        errorElement.textContent =
-          error.message
-          || "Bookingen kunne ikke gennemføres.";
-
-
-      } finally {
-
-        submitButton.disabled = false;
-
-        submitButton.textContent =
-          "Bekræft booking";
-
-      }
-    }
-
-
-
     /* =====================================
        SUCCESS
     ===================================== */

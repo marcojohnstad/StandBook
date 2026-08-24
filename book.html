@@ -1323,7 +1323,7 @@
 
     let selectedShift = null;
 
-
+    let pendingBooking = null;
 
     /* =====================================
        HELPERS
@@ -2062,9 +2062,186 @@
        BOOK
     ===================================== */
 
-    async function submitBooking(
-      event
+    async function submitBooking(event) {
+
+  event.preventDefault();
+
+
+  if (!selectedShift) {
+    return;
+  }
+
+
+  const firstName =
+    document.querySelector(
+      "#first-name"
+    ).value.trim();
+
+
+  const bookBoth =
+    document.querySelector(
+      "#book-both"
+    ).checked;
+
+
+  const secondName =
+    document.querySelector(
+      "#second-name"
+    ).value.trim();
+
+
+  const errorElement =
+    document.querySelector(
+      "#form-error"
+    );
+
+
+  const submitButton =
+    document.querySelector(
+      "#submit-booking"
+    );
+
+
+  errorElement.textContent = "";
+
+
+  document.querySelector(
+    "#conflict-box"
+  ).hidden = true;
+
+
+  if (!firstName) {
+
+    errorElement.textContent =
+      "Skriv dit navn.";
+
+    return;
+  }
+
+
+  if (
+    bookBoth &&
+    !secondName
+  ) {
+
+    errorElement.textContent =
+      "Skriv din makkers navn.";
+
+    return;
+  }
+
+
+  submitButton.disabled = true;
+
+  submitButton.textContent =
+    "Kontrollerer...";
+
+
+  try {
+
+    const conflict =
+      await window
+        .StandBookBooking
+        .checkConflict(
+          selectedShift.id,
+          firstName
+        );
+
+
+    if (
+      conflict &&
+      conflict.conflict
     ) {
+
+      pendingBooking = {
+        shiftId:
+          selectedShift.id,
+
+        firstName:
+          firstName,
+
+        secondName:
+          bookBoth
+            ? secondName
+            : null,
+
+        bookBoth:
+          bookBoth
+      };
+
+
+      const conflictText =
+        document.querySelector(
+          "#conflict-text"
+        );
+
+
+      conflictText.textContent =
+        firstName
+        + " er allerede skrevet på "
+        + conflict.stand_name
+        + " kl. "
+        + formatTime(
+            conflict.start_time
+          )
+        + "–"
+        + formatTime(
+            conflict.end_time
+          )
+        + ".";
+
+
+      document.querySelector(
+        "#conflict-box"
+      ).hidden = false;
+
+
+      submitButton.disabled = false;
+
+      submitButton.textContent =
+        "Bekræft booking";
+
+
+      return;
+    }
+
+
+    await performBooking({
+      shiftId:
+        selectedShift.id,
+
+      firstName:
+        firstName,
+
+      secondName:
+        bookBoth
+          ? secondName
+          : null,
+
+      bookBoth:
+        bookBoth
+    });
+
+
+  } catch (error) {
+
+    console.error(error);
+
+
+    errorElement.textContent =
+      error.message
+      || "Bookingen kunne ikke gennemføres.";
+
+
+  } finally {
+
+    submitButton.disabled = false;
+
+    submitButton.textContent =
+      "Bekræft booking";
+
+  }
+}
 
       event.preventDefault();
 

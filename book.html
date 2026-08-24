@@ -2021,6 +2021,8 @@
 
       selectedShift = null;
 
+      pendingBooking = null;
+
 
       document.querySelector(
         "#booking-form"
@@ -2030,6 +2032,10 @@
       document.querySelector(
         "#second-name-field"
       ).hidden = true;
+
+      document.querySelector(
+  "#conflict-box"
+).hidden = true;
 
 
       document.querySelector(

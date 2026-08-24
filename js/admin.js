@@ -44,11 +44,15 @@ async function createEvent({
   const cleanSlug = slug.trim();
 
   if (!cleanTitle) {
-    throw new Error("Arrangementet skal have et navn.");
+    throw new Error(
+      "Arrangementet skal have et navn."
+    );
   }
 
   if (!cleanSlug) {
-    throw new Error("Arrangementet skal have et URL-navn.");
+    throw new Error(
+      "Arrangementet skal have et URL-navn."
+    );
   }
 
   if (
@@ -56,8 +60,11 @@ async function createEvent({
     shiftMinutes < 15 ||
     shiftMinutes > 480
   ) {
-    throw new Error("Vagtlængden er ugyldig.");
+    throw new Error(
+      "Vagtlængden er ugyldig."
+    );
   }
+
 
   const { data, error } = await db
     .from("events")
@@ -72,7 +79,9 @@ async function createEvent({
     .select()
     .single();
 
+
   if (error) {
+
     if (error.code === "23505") {
       throw new Error(
         "URL-navnet bruges allerede af et andet arrangement."
@@ -99,7 +108,11 @@ async function getEvents() {
       shift_minutes,
       created_at
     `)
-    .order("created_at", { ascending: false });
+    .order(
+      "created_at",
+      { ascending: false }
+    );
+
 
   if (error) {
     throw error;
@@ -125,6 +138,7 @@ async function getEvent(eventId) {
     .eq("id", eventId)
     .single();
 
+
   if (error) {
     throw error;
   }
@@ -149,8 +163,15 @@ async function getStands(eventId) {
       sort_order
     `)
     .eq("event_id", eventId)
-    .order("sort_order", { ascending: true })
-    .order("id", { ascending: true });
+    .order(
+      "sort_order",
+      { ascending: true }
+    )
+    .order(
+      "id",
+      { ascending: true }
+    );
+
 
   if (error) {
     throw error;
@@ -169,15 +190,23 @@ async function createStand({
   const cleanName = name.trim();
   const cleanAddress = address.trim();
 
+
   if (!cleanName) {
-    throw new Error("Standen skal have et navn.");
+    throw new Error(
+      "Standen skal have et navn."
+    );
   }
 
   if (!cleanAddress) {
-    throw new Error("Standen skal have en adresse.");
+    throw new Error(
+      "Standen skal have en adresse."
+    );
   }
 
-  const existingStands = await getStands(eventId);
+
+  const existingStands =
+    await getStands(eventId);
+
 
   const { data, error } = await db
     .from("stands")
@@ -189,6 +218,7 @@ async function createStand({
     })
     .select()
     .single();
+
 
   if (error) {
     throw error;
@@ -215,8 +245,15 @@ async function getEventDays(eventId) {
       closes_at
     `)
     .eq("event_id", eventId)
-    .order("event_date", { ascending: true })
-    .order("opens_at", { ascending: true });
+    .order(
+      "event_date",
+      { ascending: true }
+    )
+    .order(
+      "opens_at",
+      { ascending: true }
+    );
+
 
   if (error) {
     throw error;
@@ -235,11 +272,15 @@ async function addStandDay({
 }) {
 
   if (!eventDate) {
-    throw new Error("Vælg en dato.");
+    throw new Error(
+      "Vælg en dato."
+    );
   }
 
   if (!opensAt || !closesAt) {
-    throw new Error("Vælg både start- og sluttid.");
+    throw new Error(
+      "Vælg både start- og sluttid."
+    );
   }
 
   if (closesAt <= opensAt) {
@@ -247,6 +288,7 @@ async function addStandDay({
       "Sluttiden skal være senere end starttiden."
     );
   }
+
 
   const { data, error } = await db
     .from("event_days")
@@ -259,6 +301,7 @@ async function addStandDay({
     })
     .select()
     .single();
+
 
   if (error) {
 
@@ -280,6 +323,7 @@ async function addStandDay({
 ========================================= */
 
 window.StandBookAdmin = {
+
   createSlug,
   createMapUrl,
 
@@ -292,4 +336,5 @@ window.StandBookAdmin = {
 
   getEventDays,
   addStandDay
+
 };

@@ -13,6 +13,45 @@
 
   <style>
 
+    .conflict-box {
+  margin: 8px 0 16px;
+  padding: 16px;
+
+  border: 1px solid #ead7a5;
+  border-radius: 14px;
+
+  background: var(--warning-bg);
+}
+
+.conflict-box h3 {
+  margin: 0 0 8px;
+
+  color: var(--warning-text);
+
+  font-size: 1rem;
+}
+
+.conflict-box p {
+  margin: 0 0 14px;
+
+  color: #6d581b;
+
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.conflict-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+@media (max-width: 480px) {
+  .conflict-actions {
+    grid-template-columns: 1fr;
+  }
+}
+    
     :root {
       --bg: #f5f3ee;
       --surface: #ffffff;

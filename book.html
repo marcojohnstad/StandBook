@@ -2072,23 +2072,6 @@
 
   event.preventDefault();
 
-
-  if (!selectedShift) {
-    return;
-  }
-
-
-  const firstName =
-    document.querySelector(
-      "#first-name"
-    ).value.trim();
-
-
-  const bookBoth =
-    document.querySelectorasync function submitBooking(event) {
-
-  event.preventDefault();
-
   if (!selectedShift) {
     return;
   }
@@ -2125,10 +2108,8 @@
   ).hidden = true;
 
   if (!firstName) {
-
     errorElement.textContent =
       "Skriv dit navn.";
-
     return;
   }
 
@@ -2136,15 +2117,12 @@
     bookBoth &&
     !secondName
   ) {
-
     errorElement.textContent =
       "Skriv din makkers navn.";
-
     return;
   }
 
   submitButton.disabled = true;
-
   submitButton.textContent =
     "Kontrollerer...";
 
@@ -2179,23 +2157,20 @@
           bookBoth
       };
 
-      const conflictText =
-        document.querySelector(
-          "#conflict-text"
-        );
-
-      conflictText.textContent =
+      document.querySelector(
+        "#conflict-text"
+      ).textContent =
         firstName
         + " er allerede skrevet på "
         + conflict.stand_name
         + " kl. "
         + formatTime(
-            conflict.start_time
-          )
+          conflict.start_time
+        )
         + "–"
         + formatTime(
-            conflict.end_time
-          )
+          conflict.end_time
+        )
         + ".";
 
       document.querySelector(
@@ -2235,7 +2210,6 @@
 
     submitButton.textContent =
       "Bekræft booking";
-
   }
 }
 

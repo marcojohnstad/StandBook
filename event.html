@@ -26,7 +26,8 @@
     }
 
     button,
-    input {
+    input,
+    select {
       font: inherit;
     }
 
@@ -35,7 +36,8 @@
       padding: 10px 16px;
     }
 
-    input {
+    input,
+    select {
       box-sizing: border-box;
       width: 100%;
       padding: 10px;
@@ -69,8 +71,27 @@
       background: #fafafa;
       border: 1px solid #e5e5e5;
       border-radius: 8px;
-      padding: 12px;
-      margin-top: 8px;
+      padding: 14px;
+      margin-top: 10px;
+    }
+
+    .shift-card.closed {
+      opacity: 0.6;
+    }
+
+    .shift-controls {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 12px;
+    }
+
+    .shift-controls button {
+      padding: 7px 10px;
+    }
+
+    .active-setting {
+      font-weight: bold;
     }
 
     .form-panel {
@@ -101,11 +122,13 @@
   </style>
 </head>
 
+
 <body>
 
   <p id="loading">
     Henter arrangement...
   </p>
+
 
   <main
     id="page"
@@ -118,6 +141,7 @@
     >
       ← Tilbage til arrangementer
     </a>
+
 
     <header>
 
@@ -137,7 +161,11 @@
 
     </header>
 
+
     <hr>
+
+
+    <!-- STANDE -->
 
     <section>
 
@@ -149,12 +177,14 @@
         Henter stande...
       </div>
 
+
       <button
         id="show-stand-form"
         type="button"
       >
         + Tilføj stand
       </button>
+
 
       <div
         id="stand-form-panel"
@@ -165,6 +195,7 @@
         <h3>
           Ny stand
         </h3>
+
 
         <form id="stand-form">
 
@@ -179,6 +210,7 @@
             >
           </label>
 
+
           <label>
             Adresse
 
@@ -190,9 +222,11 @@
             >
           </label>
 
+
           <button type="submit">
             Opret stand
           </button>
+
 
           <button
             id="cancel-stand"
@@ -207,6 +241,9 @@
 
     </section>
 
+
+    <!-- VAGTER -->
+
     <section id="shift-section">
 
       <hr>
@@ -216,9 +253,10 @@
       </h2>
 
       <p>
-        Generér automatisk vagter ud fra standenes
+        Vagterne genereres ud fra standenes
         åbningstider og arrangementets vagtlængde.
       </p>
+
 
       <button
         id="generate-shifts-button"
@@ -227,15 +265,18 @@
         Generér vagter
       </button>
 
+
       <div id="shifts-list">
-        <p>Ingen vagter hentet endnu.</p>
+        <p>Henter vagter...</p>
       </div>
 
     </section>
 
+
     <p id="message"></p>
 
   </main>
+
 
   <script
     src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
@@ -243,15 +284,21 @@
 
   <script src="js/config.js"></script>
   <script src="js/supabase.js"></script>
-  <script src="js/auth.js?v=5"></script>
-  <script src="js/admin.js?v=3"></script>
+  <script src="js/auth.js?v=6"></script>
+  <script src="js/admin.js?v=4"></script>
+
 
   <script>
 
     let currentEvent = null;
 
 
+    /* =====================================
+       HJÆLPEFUNKTIONER
+    ===================================== */
+
     function escapeHtml(value) {
+
       const div =
         document.createElement("div");
 
@@ -263,6 +310,7 @@
 
 
     function formatTime(value) {
+
       if (!value) {
         return "";
       }
@@ -274,6 +322,11 @@
 
 
     function formatDate(value) {
+
+      if (!value) {
+        return "";
+      }
+
       const date =
         new Date(
           value + "T12:00:00"
@@ -292,6 +345,7 @@
 
 
     function getEventId() {
+
       const params =
         new URLSearchParams(
           window.location.search
@@ -313,6 +367,40 @@
     }
 
 
+    function showMessage(text) {
+
+      const message =
+        document.querySelector(
+          "#message"
+        );
+
+      message.textContent = text;
+
+
+      if (
+        text.startsWith("✓")
+      ) {
+
+        setTimeout(
+          () => {
+
+            if (
+              message.textContent === text
+            ) {
+              message.textContent = "";
+            }
+
+          },
+          3000
+        );
+      }
+    }
+
+
+    /* =====================================
+       STANDE
+    ===================================== */
+
     async function renderStands() {
 
       const container =
@@ -323,6 +411,7 @@
       container.textContent =
         "Henter stande...";
 
+
       try {
 
         const stands =
@@ -332,12 +421,14 @@
               currentEvent.id
             );
 
+
         const days =
           await window
             .StandBookAdmin
             .getEventDays(
               currentEvent.id
             );
+
 
         if (stands.length === 0) {
 
@@ -347,6 +438,7 @@
           return;
         }
 
+
         container.innerHTML =
           stands
             .map(stand => {
@@ -354,8 +446,10 @@
               const standDays =
                 days.filter(
                   day =>
-                    day.stand_id === stand.id
+                    day.stand_id ===
+                    stand.id
                 );
+
 
               const dayHtml =
                 standDays.length
@@ -384,11 +478,13 @@
                         </div>
                       `)
                       .join("")
+
                   : `
                     <p>
                       Ingen åbningstider endnu.
                     </p>
                   `;
+
 
               return `
                 <article
@@ -401,11 +497,13 @@
                     )}
                   </h3>
 
+
                   <p>
                     ${escapeHtml(
                       stand.address
                     )}
                   </p>
+
 
                   <a
                     class="map-link"
@@ -420,11 +518,14 @@
                     Se på kort ↗
                   </a>
 
+
                   <h4>
                     Åbningstider
                   </h4>
 
+
                   ${dayHtml}
+
 
                   <button
                     type="button"
@@ -434,6 +535,7 @@
                     + Tilføj dag
                   </button>
 
+
                   <div
                     class="day-form"
                     id="day-form-${stand.id}"
@@ -441,6 +543,7 @@
                   >
 
                     <br>
+
 
                     <label>
                       Dato
@@ -451,6 +554,7 @@
                       >
                     </label>
 
+
                     <label>
                       Fra
 
@@ -460,6 +564,7 @@
                       >
                     </label>
 
+
                     <label>
                       Til
 
@@ -468,6 +573,7 @@
                         class="day-close"
                       >
                     </label>
+
 
                     <button
                       type="button"
@@ -485,7 +591,9 @@
             })
             .join("");
 
+
         attachStandListeners();
+
 
       } catch (error) {
 
@@ -513,9 +621,11 @@
               const standId =
                 button.dataset.standId;
 
+
               document.querySelector(
                 "#day-form-" + standId
               ).hidden = false;
+
 
               button.hidden = true;
             }
@@ -539,20 +649,19 @@
                   button.dataset.standId
                 );
 
+
               const form =
                 document.querySelector(
                   "#day-form-" + standId
                 );
 
-              const message =
-                document.querySelector(
-                  "#message"
-                );
 
               button.disabled = true;
 
-              message.textContent =
-                "Gemmer åbningstid...";
+              showMessage(
+                "Gemmer åbningstid..."
+              );
+
 
               try {
 
@@ -583,25 +692,23 @@
 
                   });
 
-                message.textContent =
-                  "✓ Åbningstiden er gemt.";
+
+                showMessage(
+                  "✓ Åbningstiden er gemt."
+                );
+
 
                 await renderStands();
 
-                setTimeout(
-                  () => {
-                    message.textContent = "";
-                  },
-                  2000
-                );
 
               } catch (error) {
 
                 console.error(error);
 
-                message.textContent =
+                showMessage(
                   "Kunne ikke gemme: "
-                  + error.message;
+                  + error.message
+                );
 
               } finally {
 
@@ -616,6 +723,10 @@
     }
 
 
+    /* =====================================
+       VAGTER
+    ===================================== */
+
     async function renderShifts() {
 
       const container =
@@ -623,10 +734,15 @@
           "#shifts-list"
         );
 
+
       container.innerHTML =
         "<p>Henter vagter...</p>";
 
-      const { data, error } =
+
+      const {
+        data,
+        error
+      } =
         await window
           .standbookSupabase
           .from("shifts")
@@ -658,20 +774,26 @@
             { ascending: true }
           );
 
+
       if (error) {
 
         console.error(error);
 
         container.innerHTML =
           "<p>Kunne ikke hente vagterne: "
-          + escapeHtml(error.message)
+          + escapeHtml(
+              error.message
+            )
           + "</p>";
 
         return;
       }
 
 
-      if (!data || data.length === 0) {
+      if (
+        !data ||
+        data.length === 0
+      ) {
 
         container.innerHTML =
           "<p>Der er endnu ingen genererede vagter.</p>";
@@ -688,12 +810,40 @@
               shift.stands?.name
               || "Ukendt stand";
 
+
             const eventDate =
-              shift.event_days?.event_date
+              shift.event_days
+                ?.event_date
               || "";
 
+
+            const closedClass =
+              shift.is_closed
+                ? " closed"
+                : "";
+
+
+            let statusText = "";
+
+            if (shift.is_closed) {
+
+              statusText =
+                "<strong>Status: Lukket</strong>";
+
+            } else {
+
+              statusText =
+                "<strong>Status: "
+                + shift.capacity
+                + " pladser</strong>";
+
+            }
+
+
             return `
-              <div class="shift-card">
+              <article
+                class="shift-card${closedClass}"
+              >
 
                 <strong>
                   ${escapeHtml(
@@ -719,22 +869,266 @@
                   shift.end_time
                 )}
 
-                <br>
+                <p>
+                  ${statusText}
+                </p>
 
-                Pladser:
-                ${shift.capacity}
 
-                ${
-                  shift.is_closed
-                    ? "<br><strong>Lukket</strong>"
-                    : ""
-                }
+                <div class="shift-controls">
 
-              </div>
+                  <button
+                    type="button"
+                    class="capacity-button
+                      ${
+                        !shift.is_closed &&
+                        shift.capacity === 2
+                          ? "active-setting"
+                          : ""
+                      }"
+                    data-shift-id="${shift.id}"
+                    data-capacity="2"
+                  >
+                    2 pladser
+                  </button>
+
+
+                  <button
+                    type="button"
+                    class="capacity-button
+                      ${
+                        !shift.is_closed &&
+                        shift.capacity === 1
+                          ? "active-setting"
+                          : ""
+                      }"
+                    data-shift-id="${shift.id}"
+                    data-capacity="1"
+                  >
+                    1 plads
+                  </button>
+
+
+                  ${
+                    shift.is_closed
+                      ? `
+                        <button
+                          type="button"
+                          class="reopen-button"
+                          data-shift-id="${shift.id}"
+                        >
+                          Genåbn vagt
+                        </button>
+                      `
+                      : `
+                        <button
+                          type="button"
+                          class="close-button"
+                          data-shift-id="${shift.id}"
+                        >
+                          Luk vagt
+                        </button>
+                      `
+                  }
+
+                </div>
+
+              </article>
             `;
 
           })
           .join("");
+
+
+      attachShiftListeners();
+    }
+
+
+    function attachShiftListeners() {
+
+      document
+        .querySelectorAll(
+          ".capacity-button"
+        )
+        .forEach(button => {
+
+          button.addEventListener(
+            "click",
+            async () => {
+
+              const shiftId =
+                Number(
+                  button.dataset.shiftId
+                );
+
+
+              const capacity =
+                Number(
+                  button.dataset.capacity
+                );
+
+
+              button.disabled = true;
+
+
+              try {
+
+                await window
+                  .StandBookAdmin
+                  .setShiftCapacity(
+                    shiftId,
+                    capacity
+                  );
+
+
+                showMessage(
+                  "✓ Vagten er ændret til "
+                  + capacity
+                  + (
+                      capacity === 1
+                        ? " plads."
+                        : " pladser."
+                    )
+                );
+
+
+                await renderShifts();
+
+
+              } catch (error) {
+
+                console.error(error);
+
+                showMessage(
+                  "Kunne ikke ændre vagten: "
+                  + error.message
+                );
+
+              } finally {
+
+                button.disabled = false;
+
+              }
+
+            }
+          );
+
+        });
+
+
+      document
+        .querySelectorAll(
+          ".close-button"
+        )
+        .forEach(button => {
+
+          button.addEventListener(
+            "click",
+            async () => {
+
+              const shiftId =
+                Number(
+                  button.dataset.shiftId
+                );
+
+
+              button.disabled = true;
+
+
+              try {
+
+                await window
+                  .StandBookAdmin
+                  .setShiftClosed(
+                    shiftId,
+                    true
+                  );
+
+
+                showMessage(
+                  "✓ Vagten er lukket."
+                );
+
+
+                await renderShifts();
+
+
+              } catch (error) {
+
+                console.error(error);
+
+                showMessage(
+                  "Kunne ikke lukke vagten: "
+                  + error.message
+                );
+
+              } finally {
+
+                button.disabled = false;
+
+              }
+
+            }
+          );
+
+        });
+
+
+      document
+        .querySelectorAll(
+          ".reopen-button"
+        )
+        .forEach(button => {
+
+          button.addEventListener(
+            "click",
+            async () => {
+
+              const shiftId =
+                Number(
+                  button.dataset.shiftId
+                );
+
+
+              button.disabled = true;
+
+
+              try {
+
+                await window
+                  .StandBookAdmin
+                  .setShiftClosed(
+                    shiftId,
+                    false
+                  );
+
+
+                showMessage(
+                  "✓ Vagten er genåbnet."
+                );
+
+
+                await renderShifts();
+
+
+              } catch (error) {
+
+                console.error(error);
+
+                showMessage(
+                  "Kunne ikke genåbne vagten: "
+                  + error.message
+                );
+
+              } finally {
+
+                button.disabled = false;
+
+              }
+
+            }
+          );
+
+        });
     }
 
 
@@ -745,15 +1139,14 @@
           "#generate-shifts-button"
         );
 
-      const message =
-        document.querySelector(
-          "#message"
-        );
 
       button.disabled = true;
 
-      message.textContent =
-        "Genererer vagter...";
+
+      showMessage(
+        "Genererer vagter..."
+      );
+
 
       try {
 
@@ -771,30 +1164,32 @@
               }
             );
 
+
         if (error) {
           throw error;
         }
 
-        message.textContent =
-          "✓ " + data
-          + " vagter blev genereret.";
+
+        showMessage(
+          "✓ "
+          + data
+          + " vagter blev genereret."
+        );
+
 
         await renderShifts();
 
-        setTimeout(
-          () => {
-            message.textContent = "";
-          },
-          3000
-        );
 
       } catch (error) {
 
         console.error(error);
 
-        message.textContent =
+
+        showMessage(
           "Kunne ikke generere vagter: "
-          + error.message;
+          + error.message
+        );
+
 
       } finally {
 
@@ -804,6 +1199,10 @@
     }
 
 
+    /* =====================================
+       START SIDE
+    ===================================== */
+
     async function startPage() {
 
       const profile =
@@ -811,12 +1210,15 @@
           .StandBookAuth
           .requireAdmin();
 
+
       if (!profile) {
         return;
       }
 
+
       const eventId =
         getEventId();
+
 
       if (!eventId) {
 
@@ -828,6 +1230,7 @@
         return;
       }
 
+
       try {
 
         currentEvent =
@@ -837,20 +1240,24 @@
               eventId
             );
 
+
         document.querySelector(
           "#event-title"
         ).textContent =
           currentEvent.title;
+
 
         document.querySelector(
           "#event-description"
         ).textContent =
           currentEvent.description || "";
 
+
         document.querySelector(
           "#event-status"
         ).textContent =
           currentEvent.status;
+
 
         document.querySelector(
           "#event-shift-length"
@@ -858,20 +1265,26 @@
           currentEvent.shift_minutes
           + " minutter";
 
+
         document.querySelector(
           "#loading"
         ).hidden = true;
+
 
         document.querySelector(
           "#page"
         ).hidden = false;
 
+
         await renderStands();
+
         await renderShifts();
+
 
       } catch (error) {
 
         console.error(error);
+
 
         document.querySelector(
           "#loading"
@@ -881,6 +1294,10 @@
       }
     }
 
+
+    /* =====================================
+       OPRET STAND
+    ===================================== */
 
     document
       .querySelector(
@@ -894,9 +1311,11 @@
             "#stand-form-panel"
           ).hidden = false;
 
+
           document.querySelector(
             "#show-stand-form"
           ).hidden = true;
+
 
           document.querySelector(
             "#stand-name"
@@ -918,9 +1337,11 @@
             "#stand-form"
           ).reset();
 
+
           document.querySelector(
             "#stand-form-panel"
           ).hidden = true;
+
 
           document.querySelector(
             "#show-stand-form"
@@ -940,20 +1361,20 @@
 
           event.preventDefault();
 
-          const message =
-            document.querySelector(
-              "#message"
-            );
 
           const submit =
             event.target.querySelector(
               'button[type="submit"]'
             );
 
+
           submit.disabled = true;
 
-          message.textContent =
-            "Opretter stand...";
+
+          showMessage(
+            "Opretter stand..."
+          );
+
 
           try {
 
@@ -976,35 +1397,38 @@
 
               });
 
+
             event.target.reset();
+
 
             document.querySelector(
               "#stand-form-panel"
             ).hidden = true;
 
+
             document.querySelector(
               "#show-stand-form"
             ).hidden = false;
 
-            message.textContent =
-              "✓ Standen er oprettet.";
+
+            showMessage(
+              "✓ Standen er oprettet."
+            );
+
 
             await renderStands();
 
-            setTimeout(
-              () => {
-                message.textContent = "";
-              },
-              2000
-            );
 
           } catch (error) {
 
             console.error(error);
 
-            message.textContent =
+
+            showMessage(
               "Kunne ikke oprette standen: "
-              + error.message;
+              + error.message
+            );
+
 
           } finally {
 
@@ -1031,4 +1455,5 @@
   </script>
 
 </body>
+
 </html>
